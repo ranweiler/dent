@@ -1,0 +1,6 @@
+[package]
+name = "dent"
+version = "0.1.0"
+authors = ["Joe Ranweiler <joe@lemma.co>"]
+
+[dependencies]
