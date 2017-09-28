@@ -4,3 +4,8 @@ version = "0.1.0"
 authors = ["Joe Ranweiler <joe@lemma.co>"]
 
 [dependencies]
+clap = "^2.26.1"
+
+[[bin]]
+name = "dent"
+path = "src/bin.rs"
