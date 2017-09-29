@@ -78,6 +78,33 @@ def write_t_test(path1, path2, t):
         f.write('src2\t{}\n'.format(name2))
         f.write('t\t{}\n'.format(t))
 
+# See: http://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm
+def make_t_critical_value_table():
+    MAX_DF = 100
+    degrees_freedom = [[df] for df in range(1, MAX_DF + 1)]
+
+    sig_levels_1_sided = [0.100, 0.050, 0.025, 0.010, 0.005, 0.001]
+    sig_levels_2_sided = [a/2.0 for a in sig_levels_1_sided]
+
+    norm_row = stats.norm.isf(sig_levels_1_sided)
+    t_table = stats.t.isf(sig_levels_2_sided, degrees_freedom)
+
+    fmt_row = lambda r: ''.join(map(str, ['    ', list(r), ',']))
+
+    print('[')
+
+    # The t-distribution is approximately normal as d.f. → ∞, so the normal
+    # distribution's critical values will be used to fill index 0 of the
+    # 2-dimensional array we will emit. If 1 <= d.f. <= MAX_DF, then the d.f.
+    # value is exactly the index into the table. Otherwise, we approximate the
+    # t-distribution with the normal, and just use index 0.
+    print(fmt_row(norm_row))
+
+    for row in t_table:
+        print(fmt_row(row))
+
+    print('];')
+
 def make_data():
     shutil.rmtree(data_dir, ignore_errors=True)
     os.makedirs(data_dir, exist_ok=True)
