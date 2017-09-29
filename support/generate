@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+from itertools import combinations, product
+import os
+import shutil
+
+import numpy as np
+from numpy.random import normal
+from scipy import stats
+
+
+data_dir = 'data'
+kat_dir = 'kat'
+
+means = [1, 1.1, 10]
+stddevs = [0.1, 1]
+sizes = [100, 1000]
+
+params = list(product(means, stddevs, sizes))
+
+
+def fmt_path(m, std, n):
+    return os.path.join(data_dir, '{}_{}_{}'.format(m, std, n))
+
+def read(path):
+    return np.fromfile(path, dtype=np.dtype('float64'), sep='\n')
+
+def summarize(d):
+    # Use an unbiased estimator of variance and derived values.
+    ddof = 1
+
+    # Use the percentile interpolation strategy under test.
+    interpolation = 'linear'
+
+    return {
+        'n': len(d),
+        'min': np.min(d),
+        'max': np.max(d),
+        'lower_quartile': np.percentile(d, 25.0, interpolation=interpolation),
+        'upper_quartile': np.percentile(d, 75.0, interpolation=interpolation),
+        'median': np.median(d),
+        'mean': np.mean(d),
+        'std': np.std(d, ddof=ddof),
+        'sem': stats.sem(d, ddof=ddof),
+        'var': np.var(d, ddof=ddof),
+    }
+
+def fmt_summary(summary):
+    fmt = lambda k: '{}\t{}'.format(k, summary[k])
+
+    return '\n'.join([fmt(k) for k in sorted(summary.keys())])
+
+
+def write_summary(path, summary):
+    name = os.path.basename(path)
+
+    kat_name = 'summary_{}'.format(name)
+    kat_path = os.path.join(kat_dir, kat_name)
+
+    with open(kat_path, 'w') as f:
+        f.write('src\t{}\n'.format(name))
+        f.write(fmt_summary(summary))
+        f.write('\n')
+
+def t_test(x, y):
+    t, _ = stats.ttest_ind(x, y, equal_var=False)
+
+    return t
+
+def write_t_test(path1, path2, t):
+    name1 = os.path.basename(path1)
+    name2 = os.path.basename(path2)
+
+    kat_name = 'ttest-{}-{}'.format(name1, name2)
+    kat_path = os.path.join(kat_dir, kat_name)
+
+    with open(kat_path, 'w') as f:
+        f.write('src1\t{}\n'.format(name1))
+        f.write('src2\t{}\n'.format(name2))
+        f.write('t\t{}\n'.format(t))
+
+def make_data():
+    shutil.rmtree(data_dir, ignore_errors=True)
+    os.makedirs(data_dir, exist_ok=True)
+
+    for ps in params:
+        d = normal(*ps)
+        path = fmat_path(*ps)
+        d.tofile(path, sep='\n')
+
+def make_kat():
+    shutil.rmtree(kat_dir, ignore_errors=True)
+    os.makedirs(kat_dir, exist_ok=True)
+
+    paths = [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
+
+    for p in paths:
+        d = read(p)
+        s = summarize(d)
+
+        write_summary(p, s)
+
+    for (p1, p2) in combinations(paths, r=2):
+        d1 = read(p1)
+        d2 = read(p2)
+        t = t_test(d1, d2)
+
+        write_t_test(p1, p2, t)
+
+
+if __name__ == '__main__':
+    make_kat()
