@@ -99,4 +99,8 @@ impl Summary {
     pub fn standard_deviation(&self) -> f64 {
         self.unbiased_variance().sqrt()
     }
+
+    pub fn standard_error(&self) -> f64 {
+        self.standard_deviation() / self.size().sqrt()
+    }
 }

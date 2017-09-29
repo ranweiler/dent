@@ -11,15 +11,16 @@ use std::io::{self, BufRead, BufReader};
 
 
 fn print_summary(s: &Summary) {
-    println!("N\tMin\tMax\tMedian\tMean\tStdev");
+    println!("N\tMin\tMax\tMedian\tMean\tStdDev\tStdErr");
     println!(
-        "{}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}",
+        "{}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}",
         s.size(),
         s.min(),
         s.max(),
         s.median(),
         s.mean(),
         s.standard_deviation(),
+        s.standard_error(),
     );
 }
 
