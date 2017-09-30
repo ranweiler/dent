@@ -62,7 +62,7 @@ fn parse_alpha(arg: &str) -> SigLevel {
     }
 }
 
-fn summarize_stdin() {
+fn summarize_stdin(draw_plot: bool) {
     let stdin = io::stdin();
 
     let data: Vec<f64> = stdin
@@ -72,19 +72,24 @@ fn summarize_stdin() {
         .collect();
 
     let s = Summary::new(&data).unwrap();
-    println!("{}", plot::summary_plot(&s, 80));
-    println!();
+
+    if draw_plot {
+        println!("{}\n", plot::summary_plot(&s, 80));
+    }
+
     print_summary(&s);
 }
 
-fn t_test_files(file1: &str, file2: &str, alpha: SigLevel) {
+fn t_test_files(file1: &str, file2: &str, alpha: SigLevel, draw_plot: bool) {
     let s1 = read_file(file1);
     let s2 = read_file(file2);
 
     let t_test = welch_t_test(&s1, &s2, alpha);
 
-    println!("{}", plot::comparison_plot(&s1, &s2, 80));
-    println!();
+    if draw_plot {
+        println!("{}\n", plot::comparison_plot(&s1, &s2, 80));
+    }
+
     print_summary(&s1);
     println!();
     print_summary(&s2);
@@ -120,17 +125,22 @@ fn main() {
              .help("Significance level α")
              .takes_value(true)
              .default_value(".05"))
+        .arg(Arg::with_name("plot")
+             .short("p")
+             .long("plot")
+             .help("Draw a box-and-whisker plot."))
         .get_matches();
 
+    let draw_plot = matches.is_present("plot");
     let use_stdin = matches.is_present("stdin");
 
     if use_stdin {
-        summarize_stdin();
+        summarize_stdin(draw_plot);
     } else {
         let alpha = parse_alpha(matches.value_of("alpha").unwrap());
         let file1 = matches.value_of("file1").unwrap();
         let file2 = matches.value_of("file2").unwrap();
 
-        t_test_files(file1, file2, alpha);
+        t_test_files(file1, file2, alpha, draw_plot);
     }
 }
