@@ -2,6 +2,7 @@ extern crate clap;
 extern crate dent;
 
 use clap::{App, Arg};
+use dent::plot;
 use dent::summary::Summary;
 use dent::t_test::{SigLevel, TTest, welch_t_test};
 
@@ -71,6 +72,8 @@ fn summarize_stdin() {
         .collect();
 
     let s = Summary::new(&data).unwrap();
+    println!("{}", plot::summary_plot(&s, 80));
+    println!();
     print_summary(&s);
 }
 
