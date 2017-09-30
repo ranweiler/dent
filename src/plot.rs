@@ -46,6 +46,114 @@ impl BoxWhiskerCols {
     }
 }
 
+struct RowChars {
+    wh_lo: &'static str,
+    wh_lo_box_lo_fill: &'static str,
+    box_lo: &'static str,
+    box_lo_box_mid_fill: &'static str,
+    box_mid: &'static str,
+    box_mid_box_hi_fill: &'static str,
+    box_hi: &'static str,
+    box_hi_wh_hi_fill: &'static str,
+    wh_hi: &'static str,
+}
+
+impl RowChars {
+    pub fn render(&self, row: &mut Vec<String>, cols: &BoxWhiskerCols) {
+        row[cols.wh_lo] = self.wh_lo.to_string();
+        for i in (cols.wh_lo + 1)..cols.box_lo {
+            row[i] = self.wh_lo_box_lo_fill.to_string();
+        }
+        row[cols.box_lo] = self.box_lo.to_string();
+        for i in (cols.box_lo + 1)..cols.box_mid {
+            row[i] = self.box_lo_box_mid_fill.to_string();
+        }
+        row[cols.box_mid] = self.box_mid.to_string();
+        for i in (cols.box_mid + 1)..cols.box_hi {
+            row[i] = self.box_mid_box_hi_fill.to_string();
+        }
+        row[cols.box_hi] = self.box_hi.to_string();
+        for i in (cols.box_hi + 1)..cols.wh_hi {
+            row[i] = self.box_hi_wh_hi_fill.to_string();
+        }
+        row[cols.wh_hi] = self.wh_hi.to_string();
+    }
+}
+
+struct CharSet(RowChars, RowChars, RowChars);
+
+static ASCII_CHARS: CharSet = CharSet(
+    RowChars {
+        wh_lo: " ",
+        wh_lo_box_lo_fill: " ",
+        box_lo: "+",
+        box_lo_box_mid_fill: "-",
+        box_mid: "+",
+        box_mid_box_hi_fill: "-",
+        box_hi: "+",
+        box_hi_wh_hi_fill: " ",
+        wh_hi: " ",
+    },
+    RowChars {
+        wh_lo: "|",
+        wh_lo_box_lo_fill: "-",
+        box_lo: "|",
+        box_lo_box_mid_fill: " ",
+        box_mid: "|",
+        box_mid_box_hi_fill: " ",
+        box_hi: "|",
+        box_hi_wh_hi_fill: "-",
+        wh_hi: "|",
+    },
+    RowChars {
+        wh_lo: " ",
+        wh_lo_box_lo_fill: " ",
+        box_lo: "+",
+        box_lo_box_mid_fill: "-",
+        box_mid: "+",
+        box_mid_box_hi_fill: "-",
+        box_hi: "+",
+        box_hi_wh_hi_fill: " ",
+        wh_hi: " ",
+    },
+);
+
+static UNICODE_CHARS: CharSet = CharSet(
+    RowChars {
+        wh_lo: "┬",
+        wh_lo_box_lo_fill: " ",
+        box_lo: "┌",
+        box_lo_box_mid_fill: "─",
+        box_mid: "┬",
+        box_mid_box_hi_fill: "─",
+        box_hi: "┐",
+        box_hi_wh_hi_fill: " ",
+        wh_hi: "┬",
+    },
+    RowChars {
+        wh_lo: "├",
+        wh_lo_box_lo_fill: "─",
+        box_lo: "┤",
+        box_lo_box_mid_fill: " ",
+        box_mid: "│",
+        box_mid_box_hi_fill: " ",
+        box_hi: "├",
+        box_hi_wh_hi_fill: "─",
+        wh_hi: "┤",
+    },
+    RowChars {
+        wh_lo: "┴",
+        wh_lo_box_lo_fill: " ",
+        box_lo: "└",
+        box_lo_box_mid_fill: "─",
+        box_mid: "┴",
+        box_mid_box_hi_fill: "─",
+        box_hi: "┘",
+        box_hi_wh_hi_fill: " ",
+        wh_hi: "┴",
+    },
+);
+
 fn make_row(width: usize) -> Vec<String> {
     use std::iter::repeat;
 
@@ -73,38 +181,17 @@ impl Plot {
     }
 }
 
-struct RowChars {
-    wh_lo: String,
-    wh_lo_box_lo_fill: String,
-    box_lo: String,
-    box_lo_box_mid_fill: String,
-    box_mid: String,
-    box_mid_box_hi_fill: String,
-    box_hi: String,
-    box_hi_wh_hi_fill: String,
-    wh_hi: String,
-}
+pub fn ascii_summary_plot(summary: &Summary, width: usize) -> String {
+    let data = BoxWhiskerData::from_summary(summary);
+    let cols = BoxWhiskerCols::new(&data, width);
 
-impl RowChars {
-    fn render(&self, row: &mut Vec<String>, cols: &BoxWhiskerCols) {
-        row[cols.wh_lo] = self.wh_lo.clone();
-        for i in (cols.wh_lo + 1)..cols.box_lo {
-            row[i] = self.wh_lo_box_lo_fill.clone();
-        }
-        row[cols.box_lo] = self.box_lo.clone();
-        for i in (cols.box_lo + 1)..cols.box_mid {
-            row[i] = self.box_lo_box_mid_fill.clone();
-        }
-        row[cols.box_mid] = self.box_mid.clone();
-        for i in (cols.box_mid + 1)..cols.box_hi {
-            row[i] = self.box_mid_box_hi_fill.clone();
-        }
-        row[cols.box_hi] = self.box_hi.clone();
-        for i in (cols.box_hi + 1)..cols.wh_hi {
-            row[i] = self.box_hi_wh_hi_fill.clone();
-        }
-        row[cols.wh_hi] = self.wh_hi.clone();
-    }
+    let mut plot = Plot::new(width);
+
+    ASCII_CHARS.0.render(&mut plot.0, &cols);
+    ASCII_CHARS.1.render(&mut plot.1, &cols);
+    ASCII_CHARS.2.render(&mut plot.2, &cols);
+
+    plot.render()
 }
 
 pub fn summary_plot(summary: &Summary, width: usize) -> String {
@@ -113,44 +200,9 @@ pub fn summary_plot(summary: &Summary, width: usize) -> String {
 
     let mut plot = Plot::new(width);
 
-    let chars1 = RowChars {
-        wh_lo: String::from("┬"),
-        wh_lo_box_lo_fill: String::from(" "),
-        box_lo: String::from("┌"),
-        box_lo_box_mid_fill: String::from("─"),
-        box_mid: String::from("┬"),
-        box_mid_box_hi_fill: String::from("─"),
-        box_hi: String::from("┐"),
-        box_hi_wh_hi_fill: String::from(" "),
-        wh_hi: String::from("┬"),
-    };
-    chars1.render(&mut plot.0, &cols);
-
-    let chars2 = RowChars {
-        wh_lo: String::from("├"),
-        wh_lo_box_lo_fill: String::from("─"),
-        box_lo: String::from("┤"),
-        box_lo_box_mid_fill: String::from(" "),
-        box_mid: String::from("│"),
-        box_mid_box_hi_fill: String::from(" "),
-        box_hi: String::from("├"),
-        box_hi_wh_hi_fill: String::from("─"),
-        wh_hi: String::from("┤"),
-    };
-    chars2.render(&mut plot.1, &cols);
-
-    let chars3 = RowChars {
-        wh_lo: String::from("┴"),
-        wh_lo_box_lo_fill: String::from(" "),
-        box_lo: String::from("└"),
-        box_lo_box_mid_fill: String::from("─"),
-        box_mid: String::from("┴"),
-        box_mid_box_hi_fill: String::from("─"),
-        box_hi: String::from("┘"),
-        box_hi_wh_hi_fill: String::from(" "),
-        wh_hi: String::from("┴"),
-    };
-    chars3.render(&mut plot.2, &cols);
+    UNICODE_CHARS.0.render(&mut plot.0, &cols);
+    UNICODE_CHARS.1.render(&mut plot.1, &cols);
+    UNICODE_CHARS.2.render(&mut plot.2, &cols);
 
     plot.render()
 }
@@ -176,6 +228,7 @@ pub fn comparison_plot(
     summary1: &Summary,
     summary2: &Summary,
     width: usize,
+    ascii: bool,
 ) -> String {
     let min = summary1.min().min(summary2.min());
     let max = summary1.max().max(summary2.max());
@@ -199,8 +252,15 @@ pub fn comparison_plot(
         (neg_proportion * (width as f64)).floor() as usize
     };
 
-    let plot1 = summary_plot(&summary1, width1);
-    let plot2 = summary_plot(&summary2, width2);
+    let (plot1, plot2) = if ascii {
+        let plot1 = ascii_summary_plot(&summary1, width1);
+        let plot2 = ascii_summary_plot(&summary2, width2);
+        (plot1, plot2)
+    } else {
+        let plot1 = summary_plot(&summary1, width1);
+        let plot2 = summary_plot(&summary2, width2);
+        (plot1, plot2)
+    };
 
     format!("{}\n{}", pad(&plot1, offset1), pad(&plot2, offset2))
 }
