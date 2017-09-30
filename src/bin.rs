@@ -83,6 +83,8 @@ fn t_test_files(file1: &str, file2: &str, alpha: SigLevel) {
 
     let t_test = welch_t_test(&s1, &s2, alpha);
 
+    println!("{}", plot::comparison_plot(&s1, &s2, 80));
+    println!();
     print_summary(&s1);
     println!();
     print_summary(&s2);

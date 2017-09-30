@@ -154,3 +154,53 @@ pub fn summary_plot(summary: &Summary, width: usize) -> String {
 
     plot.render()
 }
+
+fn make_padding(cols: usize) -> String {
+    use std::iter::{FromIterator, repeat};
+
+    String::from_iter(repeat(String::from(" ")).take(cols))
+}
+
+fn pad(s: &String, cols: usize) -> String {
+    let padding = make_padding(cols);
+
+    let padded: Vec<String> = s
+        .split("\n")
+        .map(|l| format!("{}{}", padding, l))
+        .collect();
+
+    padded.join("\n")
+}
+
+pub fn comparison_plot(
+    summary1: &Summary,
+    summary2: &Summary,
+    width: usize,
+) -> String {
+    let min = summary1.min().min(summary2.min());
+    let max = summary1.max().max(summary2.max());
+
+    let range = max - min;
+    let range1 = summary1.max() - summary1.min();
+    let range2 = summary2.max() - summary2.min();
+
+    let proportion1 = range1 / range;
+    let proportion2 = range2 / range;
+
+    let width1 = (proportion1 * (width as f64)).floor() as usize;
+    let width2 = (proportion2 * (width as f64)).floor() as usize;
+
+    let offset1 = {
+        let neg_proportion = (summary1.min() - min) / range;
+        (neg_proportion * (width as f64)).floor() as usize
+    };
+    let offset2 = {
+        let neg_proportion = (summary2.min() - min) / range;
+        (neg_proportion * (width as f64)).floor() as usize
+    };
+
+    let plot1 = summary_plot(&summary1, width1);
+    let plot2 = summary_plot(&summary2, width2);
+
+    format!("{}\n{}", pad(&plot1, offset1), pad(&plot2, offset2))
+}
