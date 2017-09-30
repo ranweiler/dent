@@ -62,7 +62,7 @@ fn parse_alpha(arg: &str) -> SigLevel {
     }
 }
 
-fn summarize_stdin(draw_plot: bool) {
+fn summarize_stdin(draw_plot: bool, ascii: bool) {
     let stdin = io::stdin();
 
     let data: Vec<f64> = stdin
@@ -74,20 +74,30 @@ fn summarize_stdin(draw_plot: bool) {
     let s = Summary::new(&data).unwrap();
 
     if draw_plot {
-        println!("{}\n", plot::summary_plot(&s, 80));
+        if ascii {
+            println!("{}\n", plot::ascii_summary_plot(&s, 80));
+        } else {
+            println!("{}\n", plot::summary_plot(&s, 80));
+        }
     }
 
     print_summary(&s);
 }
 
-fn t_test_files(file1: &str, file2: &str, alpha: SigLevel, draw_plot: bool) {
+fn t_test_files(
+    file1: &str,
+    file2: &str,
+    alpha: SigLevel,
+    draw_plot: bool,
+    ascii: bool,
+) {
     let s1 = read_file(file1);
     let s2 = read_file(file2);
 
     let t_test = welch_t_test(&s1, &s2, alpha);
 
     if draw_plot {
-        println!("{}\n", plot::comparison_plot(&s1, &s2, 80));
+        println!("{}\n", plot::comparison_plot(&s1, &s2, 80, ascii));
     }
 
     print_summary(&s1);
@@ -129,18 +139,22 @@ fn main() {
              .short("p")
              .long("plot")
              .help("Draw a box-and-whisker plot."))
+        .arg(Arg::with_name("ascii")
+             .long("ascii")
+             .help("Use only ASCII characters in plots."))
         .get_matches();
 
+    let ascii = matches.is_present("ascii");
     let draw_plot = matches.is_present("plot");
     let use_stdin = matches.is_present("stdin");
 
     if use_stdin {
-        summarize_stdin(draw_plot);
+        summarize_stdin(draw_plot, ascii);
     } else {
         let alpha = parse_alpha(matches.value_of("alpha").unwrap());
         let file1 = matches.value_of("file1").unwrap();
         let file2 = matches.value_of("file2").unwrap();
 
-        t_test_files(file1, file2, alpha, draw_plot);
+        t_test_files(file1, file2, alpha, draw_plot, ascii);
     }
 }
