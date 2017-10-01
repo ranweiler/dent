@@ -8,6 +8,7 @@ struct Boxplot {
     box_lo: f64,
     box_mid: f64,
     box_hi: f64,
+    marker: f64,
     wh_lo: f64,
     wh_hi: f64,
 }
@@ -21,6 +22,7 @@ impl Boxplot {
             box_lo: n(summary.percentile(0.25).unwrap()),
             box_mid: n(summary.median()),
             box_hi: n(summary.percentile(0.75).unwrap()),
+            marker: n(summary.mean()),
             wh_lo: n(summary.min()),
             wh_hi: n(summary.max()),
         }
@@ -31,6 +33,7 @@ struct BoxplotCols {
     box_lo: usize,
     box_mid: usize,
     box_hi: usize,
+    marker: usize,
     wh_lo: usize,
     wh_hi: usize,
 }
@@ -44,6 +47,7 @@ impl BoxplotCols {
             box_lo: to_col(data.box_lo),
             box_mid: to_col(data.box_mid),
             box_hi: to_col(data.box_hi),
+            marker: to_col(data.marker),
             wh_lo: to_col(data.wh_lo),
             wh_hi: to_col(data.wh_hi),
         }
@@ -84,7 +88,10 @@ impl RowChars {
     }
 }
 
-struct BoxplotChars(RowChars, RowChars, RowChars);
+struct BoxplotChars {
+    marker: &'static str,
+    rows: [RowChars; 3],
+}
 
 impl BoxplotChars {
     pub fn plot(&self, summary: &Summary, width: usize) -> String {
@@ -93,85 +100,91 @@ impl BoxplotChars {
 
         let mut plot = Plot::new(width);
 
-        self.0.render(&mut plot.0, &cols);
-        self.1.render(&mut plot.1, &cols);
-        self.2.render(&mut plot.2, &cols);
+        self.rows[0].render(&mut plot.0, &cols);
+        self.rows[1].render(&mut plot.1, &cols);
+        self.rows[2].render(&mut plot.2, &cols);
 
         plot.render()
     }
 }
 
-static ASCII_CHARS: BoxplotChars = BoxplotChars(
-    RowChars {
-        wh_lo: " ",
-        wh_lo_box_lo_fill: " ",
-        box_lo: "+",
-        box_lo_box_mid_fill: "-",
-        box_mid: "+",
-        box_mid_box_hi_fill: "-",
-        box_hi: "+",
-        box_hi_wh_hi_fill: " ",
-        wh_hi: " ",
-    },
-    RowChars {
-        wh_lo: "|",
-        wh_lo_box_lo_fill: "-",
-        box_lo: "|",
-        box_lo_box_mid_fill: " ",
-        box_mid: "|",
-        box_mid_box_hi_fill: " ",
-        box_hi: "|",
-        box_hi_wh_hi_fill: "-",
-        wh_hi: "|",
-    },
-    RowChars {
-        wh_lo: " ",
-        wh_lo_box_lo_fill: " ",
-        box_lo: "+",
-        box_lo_box_mid_fill: "-",
-        box_mid: "+",
-        box_mid_box_hi_fill: "-",
-        box_hi: "+",
-        box_hi_wh_hi_fill: " ",
-        wh_hi: " ",
-    },
-);
+static ASCII_CHARS: BoxplotChars = BoxplotChars {
+    marker: "x",
+    rows: [
+        RowChars {
+            wh_lo: " ",
+            wh_lo_box_lo_fill: " ",
+            box_lo: "+",
+            box_lo_box_mid_fill: "-",
+            box_mid: "+",
+            box_mid_box_hi_fill: "-",
+            box_hi: "+",
+            box_hi_wh_hi_fill: " ",
+            wh_hi: " ",
+        },
+        RowChars {
+            wh_lo: "|",
+            wh_lo_box_lo_fill: "-",
+            box_lo: "|",
+            box_lo_box_mid_fill: " ",
+            box_mid: "|",
+            box_mid_box_hi_fill: " ",
+            box_hi: "|",
+            box_hi_wh_hi_fill: "-",
+            wh_hi: "|",
+        },
+        RowChars {
+            wh_lo: " ",
+            wh_lo_box_lo_fill: " ",
+            box_lo: "+",
+            box_lo_box_mid_fill: "-",
+            box_mid: "+",
+            box_mid_box_hi_fill: "-",
+            box_hi: "+",
+            box_hi_wh_hi_fill: " ",
+            wh_hi: " ",
+        },
+    ],
+};
 
-static UNICODE_CHARS: BoxplotChars = BoxplotChars(
-    RowChars {
-        wh_lo: "┬",
-        wh_lo_box_lo_fill: " ",
-        box_lo: "┌",
-        box_lo_box_mid_fill: "─",
-        box_mid: "┬",
-        box_mid_box_hi_fill: "─",
-        box_hi: "┐",
-        box_hi_wh_hi_fill: " ",
-        wh_hi: "┬",
-    },
-    RowChars {
-        wh_lo: "├",
-        wh_lo_box_lo_fill: "─",
-        box_lo: "┤",
-        box_lo_box_mid_fill: " ",
-        box_mid: "│",
-        box_mid_box_hi_fill: " ",
-        box_hi: "├",
-        box_hi_wh_hi_fill: "─",
-        wh_hi: "┤",
-    },
-    RowChars {
-        wh_lo: "┴",
-        wh_lo_box_lo_fill: " ",
-        box_lo: "└",
-        box_lo_box_mid_fill: "─",
-        box_mid: "┴",
-        box_mid_box_hi_fill: "─",
-        box_hi: "┘",
-        box_hi_wh_hi_fill: " ",
-        wh_hi: "┴",
-    },
-);
+static UNICODE_CHARS: BoxplotChars = BoxplotChars {
+    marker: "✕",
+    rows: [
+        RowChars {
+            wh_lo: "┬",
+            wh_lo_box_lo_fill: " ",
+            box_lo: "┌",
+            box_lo_box_mid_fill: "─",
+            box_mid: "┬",
+            box_mid_box_hi_fill: "─",
+            box_hi: "┐",
+            box_hi_wh_hi_fill: " ",
+            wh_hi: "┬",
+        },
+        RowChars {
+            wh_lo: "├",
+            wh_lo_box_lo_fill: "─",
+            box_lo: "┤",
+            box_lo_box_mid_fill: " ",
+            box_mid: "│",
+            box_mid_box_hi_fill: " ",
+            box_hi: "├",
+            box_hi_wh_hi_fill: "─",
+            wh_hi: "┤",
+        },
+        RowChars {
+            wh_lo: "┴",
+            wh_lo_box_lo_fill: " ",
+            box_lo: "└",
+            box_lo_box_mid_fill: "─",
+            box_mid: "┴",
+            box_mid_box_hi_fill: "─",
+            box_hi: "┘",
+            box_hi_wh_hi_fill: " ",
+            wh_hi: "┴",
+        },
+    ],
+};
 
 fn make_row(width: usize) -> Vec<String> {
     use std::iter::repeat;
