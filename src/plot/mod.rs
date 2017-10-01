@@ -82,6 +82,21 @@ impl RowChars {
 
 struct CharSet(RowChars, RowChars, RowChars);
 
+impl CharSet {
+    pub fn plot(&self, summary: &Summary, width: usize) -> String {
+        let data = BoxWhiskerData::from_summary(summary);
+        let cols = BoxWhiskerCols::new(&data, width);
+
+        let mut plot = Plot::new(width);
+
+        self.0.render(&mut plot.0, &cols);
+        self.1.render(&mut plot.1, &cols);
+        self.2.render(&mut plot.2, &cols);
+
+        plot.render()
+    }
+}
+
 static ASCII_CHARS: CharSet = CharSet(
     RowChars {
         wh_lo: " ",
@@ -182,29 +197,11 @@ impl Plot {
 }
 
 pub fn ascii_summary_plot(summary: &Summary, width: usize) -> String {
-    let data = BoxWhiskerData::from_summary(summary);
-    let cols = BoxWhiskerCols::new(&data, width);
-
-    let mut plot = Plot::new(width);
-
-    ASCII_CHARS.0.render(&mut plot.0, &cols);
-    ASCII_CHARS.1.render(&mut plot.1, &cols);
-    ASCII_CHARS.2.render(&mut plot.2, &cols);
-
-    plot.render()
+    ASCII_CHARS.plot(summary, width)
 }
 
 pub fn summary_plot(summary: &Summary, width: usize) -> String {
-    let data = BoxWhiskerData::from_summary(summary);
-    let cols = BoxWhiskerCols::new(&data, width);
-
-    let mut plot = Plot::new(width);
-
-    UNICODE_CHARS.0.render(&mut plot.0, &cols);
-    UNICODE_CHARS.1.render(&mut plot.1, &cols);
-    UNICODE_CHARS.2.render(&mut plot.2, &cols);
-
-    plot.render()
+    UNICODE_CHARS.plot(summary, width)
 }
 
 fn make_padding(cols: usize) -> String {
