@@ -200,12 +200,10 @@ impl Plot {
     }
 }
 
-pub fn ascii_summary_plot(summary: &Summary, width: usize) -> String {
-    ASCII_CHARS.plot(summary, width)
-}
+pub fn summary_plot(summary: &Summary, width: usize, ascii: bool) -> String {
+    let plot_style = if ascii { &ASCII_CHARS } else { &UNICODE_CHARS };
 
-pub fn summary_plot(summary: &Summary, width: usize) -> String {
-    UNICODE_CHARS.plot(summary, width)
+    plot_style.plot(summary, width)
 }
 
 pub fn comparison_plot(
@@ -235,18 +233,8 @@ pub fn comparison_plot(
     let width1 = (proportion1 * (width as f64)).floor() as usize - (padding * 2);
     let width2 = (proportion2 * (width as f64)).floor() as usize - (padding * 2);
 
-    let (plot1, plot2) = if ascii {
-        let plot1 = ascii_summary_plot(&summary1, width1);
-        let plot2 = ascii_summary_plot(&summary2, width2);
-        (plot1, plot2)
-    } else {
-        let plot1 = summary_plot(&summary1, width1);
-        let plot2 = summary_plot(&summary2, width2);
-        (plot1, plot2)
-    };
-
-    let plot1 = stamp::Stamp::new(&plot1).unwrap();
-    let plot2 = stamp::Stamp::new(&plot2).unwrap();
+    let plot1 = stamp::Stamp::new(&summary_plot(&summary1, width1, ascii)).unwrap();
+    let plot2 = stamp::Stamp::new(&summary_plot(&summary2, width2, ascii)).unwrap();
 
     let offset1 = {
         let neg_proportion = (summary1.min() - min) / range;
@@ -257,7 +245,7 @@ pub fn comparison_plot(
         (neg_proportion * (width as f64)).floor() as usize
     } + padding;
 
-    let height = plot1.height() + plot2.height() + 1 + (padding * 2);
+    let height = plot1.height() + plot2.height() + (padding * 2);
 
     let base = if border {
         figure::Border::new(border_style, width, height).render()

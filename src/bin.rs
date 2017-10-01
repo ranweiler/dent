@@ -74,11 +74,7 @@ fn summarize_stdin(draw_plot: bool, ascii: bool) {
     let s = Summary::new(&data).unwrap();
 
     if draw_plot {
-        if ascii {
-            println!("{}\n", plot::ascii_summary_plot(&s, 80));
-        } else {
-            println!("{}\n", plot::summary_plot(&s, 80));
-        }
+        println!("{}\n", plot::summary_plot(&s, 80, ascii));
     }
 
     print_summary(&s);
