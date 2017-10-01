@@ -1,4 +1,7 @@
+mod figure;
+
 use summary::Summary;
+
 
 struct Boxplot {
     box_lo: f64,
