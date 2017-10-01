@@ -94,7 +94,7 @@ struct BoxplotChars {
 }
 
 impl BoxplotChars {
-    pub fn plot(&self, summary: &Summary, width: usize) -> String {
+    pub fn render(&self, summary: &Summary, width: usize) -> String {
         let data = Boxplot::from_summary(summary);
         let cols = BoxplotCols::new(&data, width);
 
@@ -216,7 +216,7 @@ impl Plot {
 pub fn summary_plot(summary: &Summary, width: usize, ascii: bool) -> String {
     let plot_style = if ascii { &ASCII_CHARS } else { &UNICODE_CHARS };
 
-    plot_style.plot(summary, width)
+    plot_style.render(summary, width)
 }
 
 pub fn comparison_plot(
