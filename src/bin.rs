@@ -107,7 +107,7 @@ fn t_test_files(
 
 fn main() {
     let matches = App::new("dent")
-        .version("0.1.0")
+        .version("0.2.0")
         .author("Joe Ranweiler <joe@lemma.co>")
         .about("A tiny tool for t-tests &c.")
         .arg(Arg::with_name("stdin")
