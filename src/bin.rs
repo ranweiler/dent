@@ -62,7 +62,7 @@ fn parse_alpha(arg: &str) -> SigLevel {
     }
 }
 
-fn summarize_stdin(draw_plot: bool, ascii: bool) {
+fn summarize_stdin(draw_plot: bool, width: usize, ascii: bool) {
     let stdin = io::stdin();
 
     let data: Vec<f64> = stdin
@@ -74,7 +74,7 @@ fn summarize_stdin(draw_plot: bool, ascii: bool) {
     let s = Summary::new(&data).unwrap();
 
     if draw_plot {
-        println!("{}\n", plot::summary_plot(&s, 80, ascii));
+        println!("{}\n", plot::summary_plot(&s, width, ascii));
     }
 
     print_summary(&s);
@@ -85,6 +85,7 @@ fn t_test_files(
     file2: &str,
     alpha: SigLevel,
     draw_plot: bool,
+    width: usize,
     ascii: bool,
 ) {
     let s1 = read_file(file1);
@@ -93,7 +94,7 @@ fn t_test_files(
     let t_test = welch_t_test(&s1, &s2, alpha);
 
     if draw_plot {
-        println!("{}\n", plot::comparison_plot(&s1, &s2, 84, ascii, true));
+        println!("{}\n", plot::comparison_plot(&s1, &s2, width, ascii, true));
     }
 
     print_summary(&s1);
@@ -138,19 +139,30 @@ fn main() {
         .arg(Arg::with_name("ascii")
              .long("ascii")
              .help("Use only ASCII characters in plots."))
+        .arg(Arg::with_name("width")
+             .short("w")
+             .long("width")
+             .value_name("WIDTH")
+             .takes_value(true)
+             .help("Width of boxplot"))
         .get_matches();
 
     let ascii = matches.is_present("ascii");
     let draw_plot = matches.is_present("plot");
     let use_stdin = matches.is_present("stdin");
 
+    let width = matches
+        .value_of("width")
+        .and_then(|w| w.parse::<usize>().ok())
+        .unwrap_or(80);
+
     if use_stdin {
-        summarize_stdin(draw_plot, ascii);
+        summarize_stdin(draw_plot, width, ascii);
     } else {
         let alpha = parse_alpha(matches.value_of("alpha").unwrap());
         let file1 = matches.value_of("file1").unwrap();
         let file2 = matches.value_of("file2").unwrap();
 
-        t_test_files(file1, file2, alpha, draw_plot, ascii);
+        t_test_files(file1, file2, alpha, draw_plot, width, ascii);
     }
 }
