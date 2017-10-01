@@ -1,6 +1,6 @@
 use summary::Summary;
 
-struct BoxWhiskerData {
+struct BoxplotData {
     box_lo: f64,
     box_mid: f64,
     box_hi: f64,
@@ -8,9 +8,9 @@ struct BoxWhiskerData {
     wh_hi: f64,
 }
 
-impl BoxWhiskerData {
+impl BoxplotData {
     fn from_summary(summary: &Summary) -> Self {
-        BoxWhiskerData {
+        BoxplotData {
             box_lo: summary.percentile(0.25).unwrap(),
             box_mid: summary.median(),
             box_hi: summary.percentile(0.75).unwrap(),
@@ -20,7 +20,7 @@ impl BoxWhiskerData {
     }
 }
 
-struct BoxWhiskerCols {
+struct BoxplotCols {
     box_lo: usize,
     box_mid: usize,
     box_hi: usize,
@@ -28,15 +28,15 @@ struct BoxWhiskerCols {
     wh_hi: usize,
 }
 
-impl BoxWhiskerCols {
-    fn new(data: &BoxWhiskerData, width: usize) -> Self {
+impl BoxplotCols {
+    fn new(data: &BoxplotData, width: usize) -> Self {
         let max_col = width - 1;
         let range = data.wh_hi - data.wh_lo;
         let normalize = |x| (x - data.wh_lo) / range;
         let scale = |x| (normalize(x) * (max_col as f64)) as f64;
         let to_col = |x| scale(x).floor() as usize;
 
-        BoxWhiskerCols {
+        BoxplotCols {
             box_lo: to_col(data.box_lo),
             box_mid: to_col(data.box_mid),
             box_hi: to_col(data.box_hi),
@@ -59,7 +59,7 @@ struct RowChars {
 }
 
 impl RowChars {
-    pub fn render(&self, row: &mut Vec<String>, cols: &BoxWhiskerCols) {
+    pub fn render(&self, row: &mut Vec<String>, cols: &BoxplotCols) {
         row[cols.wh_lo] = self.wh_lo.to_string();
         for i in (cols.wh_lo + 1)..cols.box_lo {
             row[i] = self.wh_lo_box_lo_fill.to_string();
@@ -80,12 +80,12 @@ impl RowChars {
     }
 }
 
-struct CharSet(RowChars, RowChars, RowChars);
+struct BoxplotChars(RowChars, RowChars, RowChars);
 
-impl CharSet {
+impl BoxplotChars {
     pub fn plot(&self, summary: &Summary, width: usize) -> String {
-        let data = BoxWhiskerData::from_summary(summary);
-        let cols = BoxWhiskerCols::new(&data, width);
+        let data = BoxplotData::from_summary(summary);
+        let cols = BoxplotCols::new(&data, width);
 
         let mut plot = Plot::new(width);
 
@@ -97,7 +97,7 @@ impl CharSet {
     }
 }
 
-static ASCII_CHARS: CharSet = CharSet(
+static ASCII_CHARS: BoxplotChars = BoxplotChars(
     RowChars {
         wh_lo: " ",
         wh_lo_box_lo_fill: " ",
@@ -133,7 +133,7 @@ static ASCII_CHARS: CharSet = CharSet(
     },
 );
 
-static UNICODE_CHARS: CharSet = CharSet(
+static UNICODE_CHARS: BoxplotChars = BoxplotChars(
     RowChars {
         wh_lo: "┬",
         wh_lo_box_lo_fill: " ",
