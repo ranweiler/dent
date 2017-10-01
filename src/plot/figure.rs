@@ -25,7 +25,7 @@ impl Filled {
         let mut s = String::new();
 
         for r in 0..self.height {
-            for c in 0..self.width {
+            for _c in 0..self.width {
                 s += &self.filler;
 
             }
