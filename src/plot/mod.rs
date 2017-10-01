@@ -104,7 +104,13 @@ impl BoxplotChars {
         self.rows[1].render(&mut plot.1, &cols);
         self.rows[2].render(&mut plot.2, &cols);
 
-        plot.render()
+        let no_marker = plot.render();
+
+        let base = stamp::Stamp::new(&no_marker).unwrap();
+        let marker = stamp::Stamp::new(self.marker).unwrap();
+        let layered = base.layer(&marker, cols.marker, 1).unwrap();
+
+        layered.render()
     }
 }
 
