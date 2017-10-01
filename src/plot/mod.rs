@@ -1,5 +1,6 @@
 mod figure;
 
+use stamp;
 use summary::Summary;
 
 
@@ -207,23 +208,6 @@ pub fn summary_plot(summary: &Summary, width: usize) -> String {
     UNICODE_CHARS.plot(summary, width)
 }
 
-fn make_padding(cols: usize) -> String {
-    use std::iter::{FromIterator, repeat};
-
-    String::from_iter(repeat(String::from(" ")).take(cols))
-}
-
-fn pad(s: &String, cols: usize) -> String {
-    let padding = make_padding(cols);
-
-    let padded: Vec<String> = s
-        .split("\n")
-        .map(|l| format!("{}{}", padding, l))
-        .collect();
-
-    padded.join("\n")
-}
-
 pub fn comparison_plot(
     summary1: &Summary,
     summary2: &Summary,
@@ -243,15 +227,6 @@ pub fn comparison_plot(
     let width1 = (proportion1 * (width as f64)).floor() as usize;
     let width2 = (proportion2 * (width as f64)).floor() as usize;
 
-    let offset1 = {
-        let neg_proportion = (summary1.min() - min) / range;
-        (neg_proportion * (width as f64)).floor() as usize
-    };
-    let offset2 = {
-        let neg_proportion = (summary2.min() - min) / range;
-        (neg_proportion * (width as f64)).floor() as usize
-    };
-
     let (plot1, plot2) = if ascii {
         let plot1 = ascii_summary_plot(&summary1, width1);
         let plot2 = ascii_summary_plot(&summary2, width2);
@@ -262,5 +237,23 @@ pub fn comparison_plot(
         (plot1, plot2)
     };
 
-    format!("{}\n{}", pad(&plot1, offset1), pad(&plot2, offset2))
+    let plot1 = stamp::Stamp::new(&plot1).unwrap();
+    let plot2 = stamp::Stamp::new(&plot2).unwrap();
+
+    let offset1 = {
+        let neg_proportion = (summary1.min() - min) / range;
+        (neg_proportion * (width as f64)).floor() as usize
+    };
+    let offset2 = {
+        let neg_proportion = (summary2.min() - min) / range;
+        (neg_proportion * (width as f64)).floor() as usize
+    };
+
+    let height = plot1.height() + plot2.height() + 1;
+
+    let mut plots = stamp::Stamp::new(&figure::Filled::blank(width, height).render()).unwrap();
+    plots = plots.layer(&plot1, offset1, 0).unwrap();
+    plots = plots.layer(&plot2, offset2, plot1.height()).unwrap();
+
+    plots.render()
 }
