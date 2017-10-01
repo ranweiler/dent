@@ -39,12 +39,12 @@ fn print_t_test(t_test: &TTest) {
 
 fn read_file(path: &str) -> Summary {
     let p = Path::new(path);
-    let f = File::open(p).ok().unwrap();
+    let f = File::open(p).unwrap();
     let r = BufReader::new(f);
 
     let data: Vec<f64> = r
         .lines()
-        .map(|l| l.ok().unwrap().parse().unwrap())
+        .map(|l| l.unwrap().parse().unwrap())
         .collect();
 
     Summary::new(&data).unwrap()
@@ -68,7 +68,7 @@ fn summarize_stdin(draw_plot: bool, ascii: bool) {
     let data: Vec<f64> = stdin
         .lock()
         .lines()
-        .map(|l| l.ok().unwrap().parse().unwrap())
+        .map(|l| l.unwrap().parse().unwrap())
         .collect();
 
     let s = Summary::new(&data).unwrap();
