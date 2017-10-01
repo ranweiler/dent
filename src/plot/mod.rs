@@ -10,12 +10,15 @@ struct BoxplotData {
 
 impl BoxplotData {
     fn from_summary(summary: &Summary) -> Self {
+        let range = summary.max() - summary.min();
+        let n = |x| (x - summary.min()) / range;
+
         BoxplotData {
-            box_lo: summary.percentile(0.25).unwrap(),
-            box_mid: summary.median(),
-            box_hi: summary.percentile(0.75).unwrap(),
-            wh_lo: summary.min(),
-            wh_hi: summary.max(),
+            box_lo: n(summary.percentile(0.25).unwrap()),
+            box_mid: n(summary.median()),
+            box_hi: n(summary.percentile(0.75).unwrap()),
+            wh_lo: n(summary.min()),
+            wh_hi: n(summary.max()),
         }
     }
 }
@@ -30,11 +33,8 @@ struct BoxplotCols {
 
 impl BoxplotCols {
     fn new(data: &BoxplotData, width: usize) -> Self {
-        let max_col = width - 1;
-        let range = data.wh_hi - data.wh_lo;
-        let normalize = |x| (x - data.wh_lo) / range;
-        let scale = |x| (normalize(x) * (max_col as f64)) as f64;
-        let to_col = |x| scale(x).floor() as usize;
+        let max_col  = (width - 1) as f64;
+        let to_col = |x: f64| (x * max_col).floor() as usize;
 
         BoxplotCols {
             box_lo: to_col(data.box_lo),
