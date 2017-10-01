@@ -213,7 +213,15 @@ pub fn comparison_plot(
     summary2: &Summary,
     width: usize,
     ascii: bool,
+    border: bool,
 ) -> String {
+    let padding = if border { 2 } else { 0 };
+    let border_style = if ascii {
+        figure::ASCII_BORDER
+    } else {
+        figure::UNICODE_BORDER
+    };
+
     let min = summary1.min().min(summary2.min());
     let max = summary1.max().max(summary2.max());
 
@@ -224,8 +232,8 @@ pub fn comparison_plot(
     let proportion1 = range1 / range;
     let proportion2 = range2 / range;
 
-    let width1 = (proportion1 * (width as f64)).floor() as usize;
-    let width2 = (proportion2 * (width as f64)).floor() as usize;
+    let width1 = (proportion1 * (width as f64)).floor() as usize - (padding * 2);
+    let width2 = (proportion2 * (width as f64)).floor() as usize - (padding * 2);
 
     let (plot1, plot2) = if ascii {
         let plot1 = ascii_summary_plot(&summary1, width1);
@@ -243,17 +251,23 @@ pub fn comparison_plot(
     let offset1 = {
         let neg_proportion = (summary1.min() - min) / range;
         (neg_proportion * (width as f64)).floor() as usize
-    };
+    } + padding;
     let offset2 = {
         let neg_proportion = (summary2.min() - min) / range;
         (neg_proportion * (width as f64)).floor() as usize
+    } + padding;
+
+    let height = plot1.height() + plot2.height() + 1 + (padding * 2);
+
+    let base = if border {
+        figure::Border::new(border_style, width, height).render()
+    } else {
+        figure::Filled::blank(width, height).render()
     };
 
-    let height = plot1.height() + plot2.height() + 1;
-
-    let mut plots = stamp::Stamp::new(&figure::Filled::blank(width, height).render()).unwrap();
-    plots = plots.layer(&plot1, offset1, 0).unwrap();
-    plots = plots.layer(&plot2, offset2, plot1.height()).unwrap();
+    let mut plots = stamp::Stamp::new(&base).unwrap();
+    plots = plots.layer(&plot1, offset1, padding).unwrap();
+    plots = plots.layer(&plot2, offset2, plot1.height() + padding).unwrap();
 
     plots.render()
 }
