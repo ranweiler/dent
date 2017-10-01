@@ -1,5 +1,6 @@
 extern crate clap;
 extern crate dent;
+extern crate term_size;
 
 use clap::{App, Arg};
 use dent::plot;
@@ -154,6 +155,7 @@ fn main() {
     let width = matches
         .value_of("width")
         .and_then(|w| w.parse::<usize>().ok())
+        .or(term_size::dimensions().map(|(w, _)| w))
         .unwrap_or(80);
 
     if use_stdin {
