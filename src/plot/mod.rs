@@ -1,6 +1,6 @@
 use summary::Summary;
 
-struct BoxplotData {
+struct Boxplot {
     box_lo: f64,
     box_mid: f64,
     box_hi: f64,
@@ -8,12 +8,12 @@ struct BoxplotData {
     wh_hi: f64,
 }
 
-impl BoxplotData {
+impl Boxplot {
     fn from_summary(summary: &Summary) -> Self {
         let range = summary.max() - summary.min();
         let n = |x| (x - summary.min()) / range;
 
-        BoxplotData {
+        Boxplot {
             box_lo: n(summary.percentile(0.25).unwrap()),
             box_mid: n(summary.median()),
             box_hi: n(summary.percentile(0.75).unwrap()),
@@ -32,7 +32,7 @@ struct BoxplotCols {
 }
 
 impl BoxplotCols {
-    fn new(data: &BoxplotData, width: usize) -> Self {
+    fn new(data: &Boxplot, width: usize) -> Self {
         let max_col  = (width - 1) as f64;
         let to_col = |x: f64| (x * max_col).floor() as usize;
 
@@ -84,7 +84,7 @@ struct BoxplotChars(RowChars, RowChars, RowChars);
 
 impl BoxplotChars {
     pub fn plot(&self, summary: &Summary, width: usize) -> String {
-        let data = BoxplotData::from_summary(summary);
+        let data = Boxplot::from_summary(summary);
         let cols = BoxplotCols::new(&data, width);
 
         let mut plot = Plot::new(width);
