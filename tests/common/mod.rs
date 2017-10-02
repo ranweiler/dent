@@ -138,12 +138,12 @@ macro_rules! summary_kat {
     ($test_name:tt, $name:expr) => {
         #[test]
         fn $test_name() {
-            use dent::summary::Summary;
+            use dent::summary::Summarizer;
             use $crate::common::{KnownSummary, read_data};
 
             let data_path = format!("{}/{}", "support/data", $name);
             let data = read_data(&data_path);
-            let summary = Summary::new(&data).unwrap();
+            let summary = Summarizer::new(&data).unwrap();
 
             let known_path = format!("{}{}", "support/kat/summary_", $name);
             let known = KnownSummary::new(&known_path);

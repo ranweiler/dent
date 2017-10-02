@@ -19,9 +19,9 @@ impl Boxplot {
         let n = |x| (x - summary.min()) / range;
 
         Boxplot {
-            box_lo: n(summary.percentile(0.25).unwrap()),
+            box_lo: n(summary.lower_quartile()),
             box_mid: n(summary.median()),
-            box_hi: n(summary.percentile(0.75).unwrap()),
+            box_hi: n(summary.upper_quartile()),
             marker: n(summary.mean()),
             wh_lo: n(summary.min()),
             wh_hi: n(summary.max()),
