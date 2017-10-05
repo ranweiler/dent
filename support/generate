@@ -21,8 +21,10 @@ params = list(product(means, stddevs, sizes))
 def fmt_path(m, std, n):
     return os.path.join(data_dir, '{}_{}_{}'.format(m, std, n))
 
+
 def read(path):
     return np.fromfile(path, dtype=np.dtype('float64'), sep='\n')
+
 
 def summarize(d):
     # Use an unbiased estimator of variance and derived values.
@@ -44,6 +46,7 @@ def summarize(d):
         'var': np.var(d, ddof=ddof),
     }
 
+
 def fmt_summary(summary):
     fmt = lambda k: '{}\t{}'.format(k, summary[k])
 
@@ -61,10 +64,12 @@ def write_summary(path, summary):
         f.write(fmt_summary(summary))
         f.write('\n')
 
+
 def t_test(x, y):
     t, _ = stats.ttest_ind(x, y, equal_var=False)
 
     return t
+
 
 def write_t_test(path1, path2, t):
     name1 = os.path.basename(path1)
@@ -77,6 +82,7 @@ def write_t_test(path1, path2, t):
         f.write('src1\t{}\n'.format(name1))
         f.write('src2\t{}\n'.format(name2))
         f.write('t\t{}\n'.format(t))
+
 
 # See: http://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm
 def make_t_critical_value_table():
@@ -105,6 +111,7 @@ def make_t_critical_value_table():
 
     print('];')
 
+
 def make_data():
     shutil.rmtree(data_dir, ignore_errors=True)
     os.makedirs(data_dir, exist_ok=True)
@@ -114,12 +121,14 @@ def make_data():
         path = fmat_path(*ps)
         d.tofile(path, sep='\n')
 
+
 def make_summary_kats(path):
     for p in paths:
         d = read(p)
         s = summarize(d)
 
         write_summary(p, s)
+
 
 def make_t_test_kats(path):
     for (p1, p2) in combinations(paths, r=2):
@@ -128,6 +137,7 @@ def make_t_test_kats(path):
         t = t_test(d1, d2)
 
         write_t_test(p1, p2, t)
+
 
 def write_lr_data(ps, x, y):
     data = np.array([x, y]).T
@@ -139,6 +149,7 @@ def write_lr_data(ps, x, y):
     y_name = 'lr-{}_{}_{}-y'.format(*ps)
     y_path = os.path.join(data_dir, y_name)
     np.savetxt(y_path, y, delimiter='\t', fmt='%.8f')
+
 
 def write_lr(ps, x, y):
     slope, intercept, r, p, se = stats.linregress(x, y)
@@ -153,6 +164,7 @@ def write_lr(ps, x, y):
         f.write('r\t{}\n'.format(r))
         f.write('p\t{}\n'.format(p))
         f.write('se\t{}\n'.format(se))
+
 
 def make_lr_kats():
     m = 2.0
@@ -169,6 +181,7 @@ def make_lr_kats():
 
         write_lr_data(ps, x, y)
         write_lr(ps, x, y)
+
 
 def make_kats():
     shutil.rmtree(kat_dir, ignore_errors=True)
