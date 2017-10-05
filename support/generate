@@ -114,18 +114,14 @@ def make_data():
         path = fmat_path(*ps)
         d.tofile(path, sep='\n')
 
-def make_kat():
-    shutil.rmtree(kat_dir, ignore_errors=True)
-    os.makedirs(kat_dir, exist_ok=True)
-
-    paths = [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
-
+def make_summary_kats(path):
     for p in paths:
         d = read(p)
         s = summarize(d)
 
         write_summary(p, s)
 
+def make_t_test_kats(path):
     for (p1, p2) in combinations(paths, r=2):
         d1 = read(p1)
         d2 = read(p2)
@@ -133,6 +129,15 @@ def make_kat():
 
         write_t_test(p1, p2, t)
 
+def make_kats():
+    shutil.rmtree(kat_dir, ignore_errors=True)
+    os.makedirs(kat_dir, exist_ok=True)
+
+    paths = [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
+
+    make_summary_kat(paths)
+    make_t_test_kat(paths)
+
 
 if __name__ == '__main__':
-    make_kat()
+    make_kats()
