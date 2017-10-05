@@ -270,9 +270,9 @@ macro_rules! lr_kat {
 
             let precision = 1e-9;
 
-            assert_appx_eq!("Slope", precision, known.slope, lr.slope);
-            assert_appx_eq!("Intercept", precision, known.intercept, lr.intercept);
-            assert_appx_eq!("R", precision, known.r, lr.r);
+            assert_appx_eq!("Slope", precision, known.slope, lr.slope());
+            assert_appx_eq!("Intercept", precision, known.intercept, lr.intercept());
+            assert_appx_eq!("R", precision, known.r, lr.r());
 
             // We dont compute these right now.
             // assert_appx_eq!("P", precision, known.p, lr.p);

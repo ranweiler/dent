@@ -2,9 +2,9 @@ use summary::Summarizer;
 
 
 pub struct LinearRegression {
-    pub intercept: f64,
-    pub r: f64,
-    pub slope: f64,
+    intercept: f64,
+    r: f64,
+    slope: f64,
 }
 
 impl LinearRegression {
@@ -18,6 +18,18 @@ impl LinearRegression {
         }
 
         Ok(LinearRegression::simple_lr(ind, dep))
+    }
+
+    pub fn intercept(&self) -> f64 {
+        self.intercept
+    }
+
+    pub fn r(&self) -> f64 {
+        self.r
+    }
+
+    pub fn slope(&self) -> f64 {
+        self.slope
     }
 
     fn simple_lr(x: &[f64], y: &[f64]) -> Self {
