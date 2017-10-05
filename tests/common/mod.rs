@@ -246,7 +246,6 @@ macro_rules! t_test_kat {
             assert_appx_eq!("T statistic", precision,
                             known.t, t_test.t);
         }
-
     }
 }
 
