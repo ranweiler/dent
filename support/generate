@@ -129,6 +129,47 @@ def make_t_test_kats(path):
 
         write_t_test(p1, p2, t)
 
+def write_lr_data(ps, x, y):
+    data = np.array([x, y]).T
+
+    x_name = 'lr-{}_{}_{}-x'.format(*ps)
+    x_path = os.path.join(data_dir, x_name)
+    np.savetxt(x_path, x, delimiter='\t', fmt='%.8f')
+
+    y_name = 'lr-{}_{}_{}-y'.format(*ps)
+    y_path = os.path.join(data_dir, y_name)
+    np.savetxt(y_path, y, delimiter='\t', fmt='%.8f')
+
+def write_lr(ps, x, y):
+    slope, intercept, r, p, se = stats.linregress(x, y)
+
+    lr_name = 'lr-{}_{}_{}'.format(*ps)
+    lr_path = os.path.join(kat_dir, lr_name)
+
+    with open(lr_path, 'w') as f:
+        f.write('src\t{}\n'.format(lr_name))
+        f.write('slope\t{}\n'.format(slope))
+        f.write('intercept\t{}\n'.format(intercept))
+        f.write('r\t{}\n'.format(r))
+        f.write('p\t{}\n'.format(p))
+        f.write('se\t{}\n'.format(se))
+
+def make_lr_kats():
+    m = 2.0
+    b = 5.0
+    params = [
+        (0, 1, 100),
+        (0, 1, 1000),
+        (1, 5, 1000),
+    ]
+
+    for ps in params:
+        x = np.random.normal(*ps)
+        y = b + m * np.random.normal(*ps)
+
+        write_lr_data(ps, x, y)
+        write_lr(ps, x, y)
+
 def make_kats():
     shutil.rmtree(kat_dir, ignore_errors=True)
     os.makedirs(kat_dir, exist_ok=True)
@@ -137,6 +178,7 @@ def make_kats():
 
     make_summary_kat(paths)
     make_t_test_kat(paths)
+    make_lr_kats()
 
 
 if __name__ == '__main__':
