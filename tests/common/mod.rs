@@ -273,10 +273,10 @@ macro_rules! lr_kat {
             assert_appx_eq!("Slope", precision, known.slope, lr.slope());
             assert_appx_eq!("Intercept", precision, known.intercept, lr.intercept());
             assert_appx_eq!("R", precision, known.r, lr.r());
+            assert_appx_eq!("Standard Error", 1e-10, known.se, lr.standard_error());
 
-            // We dont compute these right now.
+            // We dont compute this right now.
             // assert_appx_eq!("P", precision, known.p, lr.p);
-            // assert_appx_eq!("Standard Error", precision, known.se, lr.se);
         }
     }
 }
