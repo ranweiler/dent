@@ -122,6 +122,51 @@ impl KnownTTest {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct KnownLR {
+    pub src: String,
+    pub slope: f64,
+    pub intercept: f64,
+    pub r: f64,
+    pub p: f64,
+    pub se: f64,
+}
+
+impl KnownLR {
+    pub fn new(path: &str) -> Self {
+        let p = Path::new(path);
+        let f = File::open(p).ok().unwrap();
+        let r = BufReader::new(f);
+
+        let mut known = KnownLR::default();
+        let mut keys_read: HashSet<String> = HashSet::new();
+
+        for l in r.lines() {
+            let pieces: Vec<String> = l.unwrap().split('\t').map(|s| s.to_string()).collect();
+            assert_eq!(pieces.len(), 2, "Invalid line in known answer file");
+
+            let key = pieces[0].to_string();
+            let val = pieces[1].to_string();
+
+            match key.as_ref() {
+                "src" => known.src = val,
+                "slope" => known.slope = val.parse::<f64>().unwrap(),
+                "intercept" => known.intercept = val.parse::<f64>().unwrap(),
+                "r" => known.r = val.parse::<f64>().unwrap(),
+                "p" => known.p = val.parse::<f64>().unwrap(),
+                "se" => known.se = val.parse::<f64>().unwrap(),
+                _ => panic!("Unknown key in known answer file"),
+            }
+
+            keys_read.insert(key.to_string());
+        }
+
+        assert_eq!(keys_read.len(), 6, "Missing lines in known answer file");
+
+        known
+    }
+}
+
 macro_rules! assert_appx_eq {
     ($name:expr, $tolerance:expr, $known:expr, $actual:expr) => {
         let d = ($known - $actual).abs();
@@ -171,7 +216,6 @@ macro_rules! summary_kat {
             assert_appx_eq!("Standard error", precision,
                             known.standard_error, summary.standard_error());
         }
-
     }
 }
 
@@ -202,6 +246,37 @@ macro_rules! t_test_kat {
             assert_appx_eq!("T statistic", precision,
                             known.t, t_test.t);
         }
+    }
+}
 
+#[macro_export]
+macro_rules! lr_kat {
+    ($test_name:tt, $name:expr) => {
+        #[test]
+        fn $test_name() {
+            use dent::lr::LinearRegression;
+            use $crate::common::{KnownLR, read_data};
+
+            let x_path = format!("{}/{}-x", "support/data", $name);
+            let x = read_data(&x_path);
+
+            let y_path = format!("{}/{}-y", "support/data", $name);
+            let y = read_data(&y_path);
+
+            let lr = LinearRegression::new(&x, &y).unwrap();
+
+            let known_path = format!("{}/{}", "support/kat", $name);
+            let known = KnownLR::new(&known_path);
+
+            let precision = 1e-9;
+
+            assert_appx_eq!("Slope", precision, known.slope, lr.slope());
+            assert_appx_eq!("Intercept", precision, known.intercept, lr.intercept());
+            assert_appx_eq!("R", precision, known.r, lr.r());
+            assert_appx_eq!("Standard Error", 1e-10, known.se, lr.standard_error());
+
+            // We dont compute this right now.
+            // assert_appx_eq!("P", precision, known.p, lr.p);
+        }
     }
 }

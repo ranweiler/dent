@@ -83,3 +83,7 @@ t_test_kat!(t_test_kat63, "ttest-1_1_1000-10_1_1000");
 t_test_kat!(t_test_kat64, "ttest-1_1_1000-1_0.1_100");
 t_test_kat!(t_test_kat65, "ttest-1_1_1000-1_0.1_1000");
 t_test_kat!(t_test_kat66, "ttest-1_1_1000-1_1_100");
+
+lr_kat!(lr_test_0_1_100, "lr-0_1_100");
+lr_kat!(lr_test_0_1_1000, "lr-0_1_1000");
+lr_kat!(lr_test_1_5_1000, "lr-1_5_1000");
