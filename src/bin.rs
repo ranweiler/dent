@@ -41,12 +41,21 @@ fn print_t_test(t_test: &TTest) {
 fn read_file(path: &str) -> Summary {
     let p = Path::new(path);
     let f = File::open(p).unwrap();
-    let r = BufReader::new(f);
+    let reader = BufReader::new(f);
 
-    let data: Vec<f64> = r
-        .lines()
-        .map(|l| l.unwrap().parse().unwrap())
-        .collect();
+    let mut data: Vec<f64> = vec![];
+
+    for l in reader.lines() {
+        let s = l.unwrap().trim().to_string();
+
+        if s.is_empty() {
+            continue;
+        }
+
+        if let Ok(d) = s.parse() {
+            data.push(d);
+        }
+    }
 
     Summary::new(&data).unwrap()
 }
@@ -66,11 +75,19 @@ fn parse_alpha(arg: &str) -> SigLevel {
 fn summarize_stdin(draw_plot: bool, width: usize, ascii: bool) {
     let stdin = io::stdin();
 
-    let data: Vec<f64> = stdin
-        .lock()
-        .lines()
-        .map(|l| l.unwrap().parse().unwrap())
-        .collect();
+    let mut data: Vec<f64> = vec![];
+
+    for l in stdin.lock().lines() {
+        let s = l.unwrap().trim().to_string();
+
+        if s.is_empty() {
+            continue;
+        }
+
+        if let Ok(d) = s.parse() {
+            data.push(d);
+        }
+    }
 
     let s = Summary::new(&data).unwrap();
 
