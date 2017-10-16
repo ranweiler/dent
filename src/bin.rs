@@ -38,11 +38,17 @@ fn print_t_test(t_test: &TTest) {
     );
 }
 
-fn read_file(path: &str) -> Summary {
+fn summarize_file(path: &str) -> Summary {
     let p = Path::new(path);
     let f = File::open(p).unwrap();
     let reader = BufReader::new(f);
 
+    let data = read_data(reader);
+
+    Summary::new(&data).unwrap()
+}
+
+fn read_data<R>(reader: R) -> Vec<f64> where R: BufRead {
     let mut data: Vec<f64> = vec![];
 
     for l in reader.lines() {
@@ -57,7 +63,7 @@ fn read_file(path: &str) -> Summary {
         }
     }
 
-    Summary::new(&data).unwrap()
+    data
 }
 
 fn parse_alpha(arg: &str) -> SigLevel {
@@ -74,21 +80,7 @@ fn parse_alpha(arg: &str) -> SigLevel {
 
 fn summarize_stdin(draw_plot: bool, width: usize, ascii: bool) {
     let stdin = io::stdin();
-
-    let mut data: Vec<f64> = vec![];
-
-    for l in stdin.lock().lines() {
-        let s = l.unwrap().trim().to_string();
-
-        if s.is_empty() {
-            continue;
-        }
-
-        if let Ok(d) = s.parse() {
-            data.push(d);
-        }
-    }
-
+    let data = read_data(stdin.lock());
     let s = Summary::new(&data).unwrap();
 
     if draw_plot {
@@ -106,8 +98,8 @@ fn t_test_files(
     width: usize,
     ascii: bool,
 ) {
-    let s1 = read_file(file1);
-    let s2 = read_file(file2);
+    let s1 = summarize_file(file1);
+    let s2 = summarize_file(file2);
 
     let t_test = welch_t_test(&s1, &s2, alpha);
 
