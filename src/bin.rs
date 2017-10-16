@@ -38,17 +38,17 @@ fn print_t_test(t_test: &TTest) {
     );
 }
 
-fn summarize_file(path: &str) -> Summary {
+fn summarize_file(path: &str, lax_parsing: bool) -> Summary {
     let p = Path::new(path);
     let f = File::open(p).unwrap();
     let reader = BufReader::new(f);
 
-    let data = read_data(reader);
+    let data = read_data(reader, lax_parsing);
 
     Summary::new(&data).unwrap()
 }
 
-fn read_data<R>(reader: R) -> Vec<f64> where R: BufRead {
+fn read_data<R>(reader: R, lax_parsing: bool) -> Vec<f64> where R: BufRead {
     let mut data: Vec<f64> = vec![];
 
     for l in reader.lines() {
@@ -58,8 +58,14 @@ fn read_data<R>(reader: R) -> Vec<f64> where R: BufRead {
             continue;
         }
 
-        if let Ok(d) = s.parse() {
-            data.push(d);
+        let parsed = s.parse();
+
+        if lax_parsing {
+            if let Ok(d) = parsed {
+                data.push(d);
+            }
+        } else {
+            parsed.unwrap();
         }
     }
 
@@ -78,9 +84,9 @@ fn parse_alpha(arg: &str) -> SigLevel {
     }
 }
 
-fn summarize_stdin(draw_plot: bool, width: usize, ascii: bool) {
+fn summarize_stdin(draw_plot: bool, width: usize, ascii: bool, lax_parsing: bool) {
     let stdin = io::stdin();
-    let data = read_data(stdin.lock());
+    let data = read_data(stdin.lock(), lax_parsing);
     let s = Summary::new(&data).unwrap();
 
     if draw_plot {
@@ -97,9 +103,10 @@ fn t_test_files(
     draw_plot: bool,
     width: usize,
     ascii: bool,
+    lax_parsing: bool,
 ) {
-    let s1 = summarize_file(file1);
-    let s2 = summarize_file(file2);
+    let s1 = summarize_file(file1, lax_parsing);
+    let s2 = summarize_file(file2, lax_parsing);
 
     let t_test = welch_t_test(&s1, &s2, alpha);
 
@@ -142,6 +149,9 @@ fn main() {
              .help("Significance level α")
              .takes_value(true)
              .default_value(".05"))
+        .arg(Arg::with_name("lax")
+             .long("lax")
+             .help("Ignore non-numeric input lines"))
         .arg(Arg::with_name("plot")
              .short("p")
              .long("plot")
@@ -158,6 +168,7 @@ fn main() {
         .get_matches();
 
     let ascii = matches.is_present("ascii");
+    let lax_parsing = matches.is_present("lax");
     let draw_plot = matches.is_present("plot");
     let use_stdin = matches.is_present("stdin");
 
@@ -168,12 +179,12 @@ fn main() {
         .unwrap_or(80);
 
     if use_stdin {
-        summarize_stdin(draw_plot, width, ascii);
+        summarize_stdin(draw_plot, width, ascii, lax_parsing);
     } else {
         let alpha = parse_alpha(matches.value_of("alpha").unwrap());
         let file1 = matches.value_of("file1").unwrap();
         let file2 = matches.value_of("file2").unwrap();
 
-        t_test_files(file1, file2, alpha, draw_plot, width, ascii);
+        t_test_files(file1, file2, alpha, draw_plot, width, ascii, lax_parsing);
     }
 }
