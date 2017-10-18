@@ -30,6 +30,11 @@ fail() {
 }
 
 test_default() {
+  ok   "${exe} ${data}/all_numeric_lines"
+  fail "${exe} ${data}/bad_lines"
+  ok   "${exe} ${data}/empty_lines"
+  ok   "${exe} ${data}/trailing_empty_lines"
+
   ok   "${exe} -s < ${data}/all_numeric_lines"
   fail "${exe} -s < ${data}/bad_lines"
   ok   "${exe} -s < ${data}/empty_lines"
@@ -42,6 +47,11 @@ test_default() {
 }
 
 test_lax() {
+  ok "${exe} --lax ${data}/all_numeric_lines"
+  ok "${exe} --lax ${data}/bad_lines"
+  ok "${exe} --lax ${data}/empty_lines"
+  ok "${exe} --lax ${data}/trailing_empty_lines"
+
   ok "${exe} --lax -s < ${data}/all_numeric_lines"
   ok "${exe} --lax -s < ${data}/bad_lines"
   ok "${exe} --lax -s < ${data}/empty_lines"

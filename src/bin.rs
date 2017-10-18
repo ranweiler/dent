@@ -79,16 +79,19 @@ fn parse_alpha(arg: &str) -> SigLevel {
     }
 }
 
-fn summarize_stdin(draw_plot: bool, width: usize, ascii: bool, lax_parsing: bool) {
+fn summarize_stdin(lax_parsing: bool) -> Summary {
     let stdin = io::stdin();
     let data = read_data(stdin.lock(), lax_parsing);
-    let s = Summary::new(&data).unwrap();
 
+    Summary::new(&data).unwrap()
+}
+
+fn display_summary(summary: &Summary, draw_plot: bool, width: usize, ascii: bool) {
     if draw_plot {
-        println!("{}\n", plot::summary_plot(&s, width, ascii));
+        println!("{}\n", plot::summary_plot(&summary, width, ascii));
     }
 
-    print_summary(&s);
+    print_summary(&summary);
 }
 
 fn t_test_files(
@@ -135,8 +138,7 @@ fn main() {
              .index(2)
              .value_name("FILE2")
              .takes_value(true)
-             .required_unless("stdin")
-             .help("Path to 2nd file of sample data"))
+             .help("Path to an optional 2nd file of sample data"))
         .arg(Arg::with_name("alpha")
              .short("a")
              .long("alpha")
@@ -174,12 +176,28 @@ fn main() {
         .unwrap_or(80);
 
     if use_stdin {
-        summarize_stdin(draw_plot, width, ascii, lax_parsing);
+        let s = summarize_stdin(lax_parsing);
+        display_summary(&s, draw_plot, width, ascii);
     } else {
         let alpha = parse_alpha(matches.value_of("alpha").unwrap());
         let file1 = matches.value_of("file1").unwrap();
-        let file2 = matches.value_of("file2").unwrap();
 
-        t_test_files(file1, file2, alpha, draw_plot, width, ascii, lax_parsing);
+        match matches.value_of("file2") {
+            Some(file2) => {
+                t_test_files(
+                    file1,
+                    file2,
+                    alpha,
+                    draw_plot,
+                    width,
+                    ascii,
+                    lax_parsing,
+                );
+            },
+            None => {
+                let s = summarize_file(file1, lax_parsing);
+                display_summary(&s, draw_plot, width, ascii);
+            },
+        };
     }
 }
