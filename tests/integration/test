@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -u -o pipefail
+readonly __dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly data="${__dir}/data"
+
+exe="cargo run --"
+
+ok() {
+  echo "[test] \`$1\`"
+
+  eval $1 &> /dev/null
+  ret=$?
+
+  if [[ ${ret} != 0 ]]; then
+    echo "Expected ok for: \`$1\`"
+    exit 1
+  fi
+}
+
+fail() {
+  echo "[test] \`$1\`"
+
+  eval $1 &> /dev/null
+  ret=$?
+
+  if [[ ${ret} == 0 ]]; then
+    echo "Expected err for: \`$1\`"
+    exit 1
+  fi
+}
+
+test_default() {
+  ok   "${exe} -s < ${data}/all_numeric_lines"
+  fail "${exe} -s < ${data}/bad_lines"
+  ok   "${exe} -s < ${data}/empty_lines"
+  ok   "${exe} -s < ${data}/trailing_empty_lines"
+
+  ok   "${exe} ${data}/all_numeric_lines ${data}/all_numeric_lines"
+  fail "${exe} ${data}/bad_lines ${data}/bad_lines"
+  ok   "${exe} ${data}/empty_lines ${data}/empty_lines"
+  ok   "${exe} ${data}/trailing_empty_lines ${data}/trailing_empty_lines"
+}
+
+test_lax() {
+  ok "${exe} --lax -s < ${data}/all_numeric_lines"
+  ok "${exe} --lax -s < ${data}/bad_lines"
+  ok "${exe} --lax -s < ${data}/empty_lines"
+  ok "${exe} --lax -s < ${data}/trailing_empty_lines"
+
+  ok "${exe} --lax ${data}/all_numeric_lines ${data}/all_numeric_lines"
+  ok "${exe} --lax ${data}/bad_lines ${data}/bad_lines"
+  ok "${exe} --lax ${data}/empty_lines ${data}/empty_lines"
+  ok "${exe} --lax ${data}/trailing_empty_lines ${data}/trailing_empty_lines"
+}
+
+test_all() {
+  test_default
+  test_lax
+}
+
+test_all
