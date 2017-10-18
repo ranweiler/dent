@@ -58,14 +58,9 @@ fn read_data<R>(reader: R, lax_parsing: bool) -> Vec<f64> where R: BufRead {
             continue;
         }
 
-        let parsed = s.parse();
-
-        if lax_parsing {
-            if let Ok(d) = parsed {
-                data.push(d);
-            }
-        } else {
-            parsed.unwrap();
+        match s.parse() {
+            Ok(d) => data.push(d),
+            err => if !lax_parsing { err.unwrap(); }
         }
     }
 
