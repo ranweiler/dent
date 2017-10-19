@@ -63,9 +63,20 @@ test_lax() {
   ok "${exe} --lax ${data}/trailing_empty_lines ${data}/trailing_empty_lines"
 }
 
+test_positional_args() {
+  readonly file="${data}/all_numeric_lines"
+
+  fail "${exe}"
+  ok   "${exe} ${file}"
+  ok   "${exe} ${file} ${file}"
+  ok   "${exe} ${file} ${file} ${file}"
+  ok   "${exe} ${file} ${file} ${file} ${file}"
+}
+
 test_all() {
   test_default
   test_lax
+  test_positional_args
 }
 
 test_all
