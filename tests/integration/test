@@ -6,30 +6,35 @@ readonly data="${__dir}/data"
 exe="cargo run --"
 
 ok() {
-  echo "[test] \`$1\`"
-
   eval $1 &> /dev/null
   ret=$?
 
-  if [[ ${ret} != 0 ]]; then
-    echo "Expected ok for: \`$1\`"
+  if [[ ${ret} == 0 ]]; then
+    echo "ok - \`$1\`"
+  else
+    echo "not ok - \`$1\`"
     exit 1
   fi
 }
 
 fail() {
-  echo "[test] \`$1\`"
-
   eval $1 &> /dev/null
   ret=$?
 
   if [[ ${ret} == 0 ]]; then
-    echo "Expected err for: \`$1\`"
+    echo "not ok - \`$1\`"
     exit 1
+  else
+    echo "ok - \`$1\`"
   fi
 }
 
 test_default() {
+  ok   "${exe} ${data}/all_numeric_lines"
+  fail "${exe} ${data}/bad_lines"
+  ok   "${exe} ${data}/empty_lines"
+  ok   "${exe} ${data}/trailing_empty_lines"
+
   ok   "${exe} -s < ${data}/all_numeric_lines"
   fail "${exe} -s < ${data}/bad_lines"
   ok   "${exe} -s < ${data}/empty_lines"
@@ -42,6 +47,11 @@ test_default() {
 }
 
 test_lax() {
+  ok "${exe} --lax ${data}/all_numeric_lines"
+  ok "${exe} --lax ${data}/bad_lines"
+  ok "${exe} --lax ${data}/empty_lines"
+  ok "${exe} --lax ${data}/trailing_empty_lines"
+
   ok "${exe} --lax -s < ${data}/all_numeric_lines"
   ok "${exe} --lax -s < ${data}/bad_lines"
   ok "${exe} --lax -s < ${data}/empty_lines"
@@ -53,9 +63,20 @@ test_lax() {
   ok "${exe} --lax ${data}/trailing_empty_lines ${data}/trailing_empty_lines"
 }
 
+test_positional_args() {
+  readonly file="${data}/all_numeric_lines"
+
+  fail "${exe}"
+  ok   "${exe} ${file}"
+  ok   "${exe} ${file} ${file}"
+  ok   "${exe} ${file} ${file} ${file}"
+  ok   "${exe} ${file} ${file} ${file} ${file}"
+}
+
 test_all() {
   test_default
   test_lax
+  test_positional_args
 }
 
 test_all
