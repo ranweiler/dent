@@ -109,7 +109,7 @@ fn t_test_files(
     let t_test = welch_t_test(&s1, &s2, alpha);
 
     if draw_plot {
-        println!("{}\n", plot::comparison_plot(&s1, &s2, width, ascii, true));
+        println!("{}\n", plot::comparison_plot(&[&s1, &s2], width, ascii, true));
     }
 
     print_summary(&s1);
