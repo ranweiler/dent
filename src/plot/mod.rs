@@ -231,7 +231,7 @@ pub fn comparison_plot(
     ascii: bool,
     border: bool,
 ) -> String {
-    if summaries.len() < 2 { unreachable!(); }
+    if summaries.is_empty() { unreachable!(); }
 
     let padding = if border { 2 } else { 0 };
     let border_style = if ascii {

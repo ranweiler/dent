@@ -195,9 +195,25 @@ fn main() {
                 );
             }
             _ => {
-                for f in files {
-                    let s = summarize_file(f, lax_parsing);
-                    display_summary(&s, draw_plot, width, ascii);
+                let summaries: Vec<Summary> = files
+                    .iter()
+                    .map(|f| summarize_file(f, lax_parsing))
+                    .collect();
+
+                if draw_plot {
+                    let summary_refs: Vec<&Summary> = summaries
+                        .iter()
+                        .collect();
+
+                    let plot = plot::comparison_plot(&summary_refs, width, ascii, true);
+                    println!("{}\n", plot);
+                }
+
+                for i in 0..summaries.len() {
+                    if i > 0 {
+                        println!();
+                    }
+                    print_summary(&summaries[i]);
                 }
             },
         };
