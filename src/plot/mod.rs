@@ -40,7 +40,7 @@ struct BoxplotCols {
 
 impl BoxplotCols {
     fn new(data: &Boxplot, width: usize) -> Self {
-        let max_col  = (width - 1) as f64;
+        let max_col = (width - 1) as f64;
         let to_col = |x: f64| (x * max_col).floor() as usize;
 
         BoxplotCols {
@@ -226,45 +226,41 @@ pub fn summary_plot(summary: &Summary, width: usize, ascii: bool) -> String {
 }
 
 pub fn comparison_plot(
-    summary1: &Summary,
-    summary2: &Summary,
+    summaries: &[&Summary],
     width: usize,
     ascii: bool,
     border: bool,
 ) -> String {
+    if summaries.is_empty() { unreachable!(); }
+
     let padding = if border { 2 } else { 0 };
     let border_style = if ascii {
         figure::ASCII_BORDER
     } else {
         figure::UNICODE_BORDER
     };
-
-    let min = summary1.min().min(summary2.min());
-    let max = summary1.max().max(summary2.max());
-
+    use std::f64;
+    let min = summaries.iter().map(|s| s.min()).fold(f64::MAX, |x, y| x.min(y));
+    let max = summaries.iter().map(|s| s.max()).fold(f64::MIN, |x, y| x.max(y));
     let range = max - min;
-    let range1 = summary1.max() - summary1.min();
-    let range2 = summary2.max() - summary2.min();
 
-    let proportion1 = range1 / range;
-    let proportion2 = range2 / range;
+    let mut plots = vec![];
 
-    let width1 = (proportion1 * (width as f64)).floor() as usize - (padding * 2);
-    let width2 = (proportion2 * (width as f64)).floor() as usize - (padding * 2);
+    for s in summaries {
+        let p = (s.max() - s.min()) / range;
+        let w = (p * (width as f64)).floor() as usize - (padding * 2); // could underflow
+        let plot = stamp::Stamp::new(&summary_plot(s, w, ascii)).unwrap();
+        let left_padding = {
+            let lpp = (s.min() - min) / range;
+            (lpp * (width as f64)).floor() as usize
+        } + padding;
+        plots.push((plot, left_padding));
+    }
 
-    let plot1 = stamp::Stamp::new(&summary_plot(&summary1, width1, ascii)).unwrap();
-    let plot2 = stamp::Stamp::new(&summary_plot(&summary2, width2, ascii)).unwrap();
-
-    let offset1 = {
-        let neg_proportion = (summary1.min() - min) / range;
-        (neg_proportion * (width as f64)).floor() as usize
-    } + padding;
-    let offset2 = {
-        let neg_proportion = (summary2.min() - min) / range;
-        (neg_proportion * (width as f64)).floor() as usize
-    } + padding;
-
-    let height = plot1.height() + plot2.height() + (padding * 2);
+    let height = &plots
+        .iter()
+        .map(|&(ref p, _)| p.height())
+        .sum() + (padding * 2);
 
     let base = if border {
         figure::Border::new(border_style, width, height).render()
@@ -272,9 +268,11 @@ pub fn comparison_plot(
         figure::Filled::blank(width, height).render()
     };
 
-    let mut plots = stamp::Stamp::new(&base).unwrap();
-    plots = plots.layer(&plot1, offset1, padding).unwrap();
-    plots = plots.layer(&plot2, offset2, plot1.height() + padding).unwrap();
+    let mut all_plots = stamp::Stamp::new(&base).unwrap();
 
-    plots.render()
+    for (i, &(ref plot, left_padding)) in plots.iter().enumerate() {
+        all_plots = all_plots.layer(&plot, left_padding, padding + i * plot.height()).unwrap();
+    }
+
+    all_plots.render()
 }

@@ -86,35 +86,24 @@ fn summarize_stdin(lax_parsing: bool) -> Summary {
     Summary::new(&data).unwrap()
 }
 
-fn display_summary(summary: &Summary, draw_plot: bool, width: usize, ascii: bool) {
-    if draw_plot {
-        println!("{}\n", plot::summary_plot(&summary, width, ascii));
-    }
-
-    print_summary(&summary);
-}
-
-fn t_test_files(
-    file1: &str,
-    file2: &str,
+fn display_t_test(
+    summary1: &Summary,
+    summary2: &Summary,
     alpha: SigLevel,
     draw_plot: bool,
     width: usize,
     ascii: bool,
-    lax_parsing: bool,
 ) {
-    let s1 = summarize_file(file1, lax_parsing);
-    let s2 = summarize_file(file2, lax_parsing);
-
-    let t_test = welch_t_test(&s1, &s2, alpha);
+    let t_test = welch_t_test(&summary1, &summary2, alpha);
 
     if draw_plot {
-        println!("{}\n", plot::comparison_plot(&s1, &s2, width, ascii, true));
+        let p = plot::comparison_plot(&[&summary1, &summary2], width, ascii, true);
+        println!("{}\n", p);
     }
 
-    print_summary(&s1);
+    print_summary(&summary1);
     println!();
-    print_summary(&s2);
+    print_summary(&summary2);
     println!();
     print_t_test(&t_test);
 }
@@ -170,36 +159,44 @@ fn main() {
         .or(term_size::dimensions().map(|(w, _)| w))
         .unwrap_or(80);
 
-    if use_stdin {
-        let s = summarize_stdin(lax_parsing);
-        display_summary(&s, draw_plot, width, ascii);
+    let summaries = if use_stdin {
+        vec![summarize_stdin(lax_parsing)]
     } else {
-        let alpha = parse_alpha(matches.value_of("alpha").unwrap());
-        let files: Vec<_> = matches.values_of("files").unwrap().collect();
+        matches.values_of("files").unwrap()
+            .map(|f| summarize_file(f, lax_parsing))
+            .collect()
+    };
 
-        match files.len() {
-            0 => unreachable!(),
-            1 => {
-                let s = summarize_file(files[0], lax_parsing);
-                display_summary(&s, draw_plot, width, ascii);
-            },
-            2 => {
-                t_test_files(
-                    files[0],
-                    files[1],
-                    alpha,
-                    draw_plot,
-                    width,
-                    ascii,
-                    lax_parsing,
-                );
+    match summaries.len() {
+        0 => unreachable!(),
+        2 => {
+            let alpha = parse_alpha(matches.value_of("alpha").unwrap());
+
+            display_t_test(
+                &summaries[0],
+                &summaries[1],
+                alpha,
+                draw_plot,
+                width,
+                ascii,
+            );
+        }
+        _ => {
+            if draw_plot {
+                let summary_refs: Vec<&Summary> = summaries
+                    .iter()
+                    .collect();
+
+                let plot = plot::comparison_plot(&summary_refs, width, ascii, true);
+                println!("{}\n", plot);
             }
-            _ => {
-                for f in files {
-                    let s = summarize_file(f, lax_parsing);
-                    display_summary(&s, draw_plot, width, ascii);
+
+            for i in 0..summaries.len() {
+                if i > 0 {
+                    println!();
                 }
-            },
-        };
-    }
+                print_summary(&summaries[i]);
+            }
+        },
+    };
 }
