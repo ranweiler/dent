@@ -40,7 +40,7 @@ struct BoxplotCols {
 
 impl BoxplotCols {
     fn new(data: &Boxplot, width: usize) -> Self {
-        let max_col  = (width - 1) as f64;
+        let max_col = (width - 1) as f64;
         let to_col = |x: f64| (x * max_col).floor() as usize;
 
         BoxplotCols {
