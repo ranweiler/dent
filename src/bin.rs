@@ -45,26 +45,14 @@ fn print_summary(s: &Summary) {
 }
 
 fn print_t_test(t_test: &TTest) {
-    let width = 10;
+    let width = 12;
+    let reject = if t_test.reject { "yes" } else { "no" };
 
-    println!(
-        "{t:>w$}  {df:>w$}  {alpha:>w$}  {crit:>w$}  {reject:>w$}",
-        w = width,
-        t = "t",
-        df = "DF",
-        alpha = "α",
-        crit = "Crit",
-        reject = "Reject",
-    );
-    println!(
-        "{t:>w$}  {df:>w$}  {alpha:>w$}  {crit:>w$}  {reject:>w$}",
-        w = width,
-        t = fmt::f(t_test.t, width),
-        df = fmt::f(t_test.df as f64, width),
-        alpha = fmt::f(t_test.alpha, width),
-        crit = fmt::f(t_test.crit, width),
-        reject = t_test.reject,
-    );
+    println!("{l:>w$} = {v}", w = width, l = "Reject H₀?", v = reject);
+    println!("{l:>w$} = {v}", w = width, l = "α", v = t_test.alpha);
+    println!("{l:>w$} = {v}", w = width, l = "t", v = t_test.t);
+    println!("{l:>w$} = {v}", w = width, l = "Crit. v", v = t_test.crit);
+    println!("{l:>w$} = {v}", w = width, l = "DF", v = t_test.df);
 }
 
 fn summarize_file(path: &str, lax_parsing: bool) -> Summary {
