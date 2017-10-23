@@ -11,31 +11,48 @@ use std::fs::File;
 use std::path::Path;
 use std::io::{self, BufRead, BufReader};
 
+mod fmt;
+
 
 fn print_summary(s: &Summary) {
-    println!("N\tMin\tMax\tMedian\tMean\tStdDev\tStdErr");
+    let width = 10;
+    let size_width = 6;
+
     println!(
-        "{}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}\t{:0.2}",
-        s.size(),
-        s.min(),
-        s.max(),
-        s.median(),
-        s.mean(),
-        s.standard_deviation(),
-        s.standard_error(),
+        "{n:>nw$}  {min:>w$}  {max:>w$}  {med:>w$}  {mean:>w$}  {sd:>w$}  {se:>w$}",
+        w = width,
+        nw = size_width,
+        n = "N",
+        min = "Min",
+        max = "Max",
+        med = "Median",
+        mean = "Mean",
+        sd= "StdDev",
+        se = "StdErr",
+    );
+    println!(
+        "{n:>nw$}  {min:>w$}  {max:>w$}  {med:>w$}  {mean:>w$}  {sd:>w$}  {se:>w$}",
+        w = width,
+        nw = size_width,
+        n = fmt::f(s.size(), width),
+        min = fmt::f(s.min(), width),
+        max = fmt::f(s.max(), width),
+        med = fmt::f(s.median(), width),
+        mean = fmt::f(s.mean(), width),
+        sd = fmt::f(s.standard_deviation(), width),
+        se = fmt::f(s.standard_error(), width),
     );
 }
 
 fn print_t_test(t_test: &TTest) {
-    println!("T\tDF\tAlpha\tCrit\tRejectNull");
-    println!(
-        "{:0.3}\t{}\t{:0.3}\t{:0.3}\t{}",
-        t_test.t,
-        t_test.df,
-        t_test.alpha,
-        t_test.crit,
-        t_test.reject,
-    );
+    let width = 12;
+    let reject = if t_test.reject { "yes" } else { "no" };
+
+    println!("{l:>w$} = {v}", w = width, l = "Reject H₀?", v = reject);
+    println!("{l:>w$} = {v}", w = width, l = "α", v = t_test.alpha);
+    println!("{l:>w$} = {v}", w = width, l = "t", v = t_test.t);
+    println!("{l:>w$} = {v}", w = width, l = "Crit. v", v = t_test.crit);
+    println!("{l:>w$} = {v}", w = width, l = "DF", v = t_test.df);
 }
 
 fn summarize_file(path: &str, lax_parsing: bool) -> Summary {
