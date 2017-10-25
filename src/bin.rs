@@ -13,7 +13,13 @@ use std::path::Path;
 use std::io::{self, BufRead, BufReader};
 
 mod fmt;
+mod log;
 
+
+fn fail<E>(err: E) -> ! where E: std::error::Error {
+    log::error(&format!("{}", err));
+    std::process::exit(1);
+}
 
 fn print_summary(s: &Summary) {
     let width = 10;
@@ -58,7 +64,10 @@ fn print_t_test(t_test: &TTest) {
 
 fn summarize_file(path: &str, lax_parsing: bool) -> Summary {
     let p = Path::new(path);
-    let f = File::open(p).unwrap();
+    let f = match File::open(p) {
+        Ok(f) => f,
+        Err(e) => fail(e),
+    };
     let reader = BufReader::new(f);
 
     let data = read_data(reader, lax_parsing);
