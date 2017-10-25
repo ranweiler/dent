@@ -1,5 +1,6 @@
 extern crate clap;
 extern crate dent;
+extern crate term;
 extern crate term_size;
 
 use clap::{App, Arg};
