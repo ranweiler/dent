@@ -1,3 +1,6 @@
+use error::Error;
+
+
 #[derive(Debug)]
 pub struct Summarizer {
     data: Vec<f64>,
@@ -13,13 +16,13 @@ impl Summarizer {
     ///   - All values are finite
     ///   - The data are sorted
     ///
-    pub fn new(data: &[f64]) -> Option<Self> {
+    pub fn new(data: &[f64]) -> Result<Self, Error> {
         if data.len() == 0 {
-            return None;
+            return Err(Error::EmptySample);
         }
 
         if data.iter().any(|x| !x.is_finite()) {
-            return None;
+            return Err(Error::BadSample);
         }
 
         let mut data = Vec::from(data);
@@ -29,7 +32,7 @@ impl Summarizer {
 
         let s = Summarizer { data };
 
-        Some(s)
+        Ok(s)
     }
 
     pub fn as_slice(&self) -> &[f64] {
@@ -129,7 +132,7 @@ impl Summary {
     ///   - All values are finite
     ///   - The data are sorted
     ///
-    pub fn new(data: &[f64]) -> Option<Self> {
+    pub fn new(data: &[f64]) -> Result<Self, Error> {
         Summarizer::new(data).map(|s| Summary {
             len: s.data.len(),
             lower_quartile: s.percentile(0.25).unwrap(),
