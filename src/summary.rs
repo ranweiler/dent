@@ -17,7 +17,7 @@ impl Summarizer {
     ///   - The data are sorted
     ///
     pub fn new(data: &[f64]) -> Result<Self, Error> {
-        if data.len() == 0 {
+        if data.is_empty() {
             return Err(Error::EmptySample);
         }
 
