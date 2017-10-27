@@ -8,6 +8,7 @@ use dent::plot;
 use dent::summary::Summary;
 use dent::t_test::{SigLevel, TTest, welch_t_test};
 
+use std::error;
 use std::fs::File;
 use std::path::Path;
 use std::io::{self, BufRead, BufReader};
@@ -16,9 +17,16 @@ mod fmt;
 mod log;
 
 
-fn fail<E>(err: E) -> ! where E: std::error::Error {
-    log::error(&format!("{}", err));
-    std::process::exit(1);
+macro_rules! ok {
+    ($r: expr) => {
+        match $r {
+            Ok(t) => t,
+            Err(e) => {
+                log::error(&format!("{}", e));
+                std::process::exit(1);
+            }
+        }
+    }
 }
 
 fn print_summary(s: &Summary) {
@@ -62,20 +70,18 @@ fn print_t_test(t_test: &TTest) {
     println!("{l:>w$} = {v}", w = width, l = "DF", v = t_test.df);
 }
 
-fn summarize_file(path: &str, lax_parsing: bool) -> Summary {
+fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
     let p = Path::new(path);
-    let f = match File::open(p) {
-        Ok(f) => f,
-        Err(e) => fail(e),
-    };
+    let f = File::open(p)?;
     let reader = BufReader::new(f);
 
-    let data = read_data(reader, lax_parsing);
+    let data = read_data(reader, lax_parsing)?;
 
-    Summary::new(&data).unwrap()
+    Ok(Summary::new(&data).unwrap())
 }
 
-fn read_data<R>(reader: R, lax_parsing: bool) -> Vec<f64> where R: BufRead {
+fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Error>>
+    where R: BufRead {
     let mut data: Vec<f64> = vec![];
 
     for l in reader.lines() {
@@ -87,11 +93,11 @@ fn read_data<R>(reader: R, lax_parsing: bool) -> Vec<f64> where R: BufRead {
 
         match s.parse() {
             Ok(d) => data.push(d),
-            err => if !lax_parsing { err.unwrap(); }
+            err => if !lax_parsing { err?; }
         }
     }
 
-    data
+    Ok(data)
 }
 
 fn parse_alpha(arg: &str) -> SigLevel {
@@ -106,11 +112,11 @@ fn parse_alpha(arg: &str) -> SigLevel {
     }
 }
 
-fn summarize_stdin(lax_parsing: bool) -> Summary {
+fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
     let stdin = io::stdin();
-    let data = read_data(stdin.lock(), lax_parsing);
+    let data = read_data(stdin.lock(), lax_parsing)?;
 
-    Summary::new(&data).unwrap()
+    Ok(Summary::new(&data).unwrap())
 }
 
 fn display_t_test(
@@ -124,7 +130,7 @@ fn display_t_test(
     let t_test = welch_t_test(&summary1, &summary2, alpha);
 
     if draw_plot {
-        let p = plot::comparison_plot(&[&summary1, &summary2], width, ascii, true);
+        let p = plot::comparison_plot(&[summary1, summary2], width, ascii, true);
         println!("{}\n", p);
     }
 
@@ -133,6 +139,29 @@ fn display_t_test(
     print_summary(&summary2);
     println!();
     print_t_test(&t_test);
+}
+
+fn display_summaries(
+    summaries: &[Summary],
+    draw_plot: bool,
+    width: usize,
+    ascii: bool,
+) {
+    if draw_plot {
+        let summary_refs: Vec<&Summary> = summaries
+            .iter()
+            .collect();
+
+        let plot = plot::comparison_plot(&summary_refs, width, ascii, true);
+        println!("{}\n", plot);
+    }
+
+    for i in 0..summaries.len() {
+        if i > 0 {
+            println!();
+        }
+        print_summary(&summaries[i]);
+    }
 }
 
 fn main() {
@@ -187,10 +216,11 @@ fn main() {
         .unwrap_or(80);
 
     let summaries = if use_stdin {
-        vec![summarize_stdin(lax_parsing)]
+        vec![ok!(summarize_stdin(lax_parsing))]
     } else {
-        matches.values_of("files").unwrap()
-            .map(|f| summarize_file(f, lax_parsing))
+        matches.values_of("files")
+            .unwrap()
+            .map(|f| ok!(summarize_file(f, lax_parsing)))
             .collect()
     };
 
@@ -209,21 +239,7 @@ fn main() {
             );
         }
         _ => {
-            if draw_plot {
-                let summary_refs: Vec<&Summary> = summaries
-                    .iter()
-                    .collect();
-
-                let plot = plot::comparison_plot(&summary_refs, width, ascii, true);
-                println!("{}\n", plot);
-            }
-
-            for i in 0..summaries.len() {
-                if i > 0 {
-                    println!();
-                }
-                print_summary(&summaries[i]);
-            }
+            display_summaries(&summaries, draw_plot, width, ascii);
         },
     };
 }
