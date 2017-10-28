@@ -10,7 +10,6 @@ use dent::t_test::{SigLevel, TTest, welch_t_test};
 
 use std::error;
 use std::fs::File;
-use std::path::Path;
 use std::io::{self, BufRead, BufReader};
 
 mod fmt;
@@ -71,9 +70,8 @@ fn print_t_test(t_test: &TTest) {
 }
 
 fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
-    let p = Path::new(path);
-    let f = File::open(p).or_else(|e| {
-        log::error(&format!("Could not open file: {:?}", p));
+    let f = File::open(path).or_else(|e| {
+        log::error(&format!("Could not open file: {:?}", path));
         Err(e)
     })?;
     let reader = BufReader::new(f);
