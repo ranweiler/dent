@@ -72,7 +72,10 @@ fn print_t_test(t_test: &TTest) {
 
 fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
     let p = Path::new(path);
-    let f = File::open(p)?;
+    let f = File::open(p).or_else(|e| {
+        log::error(&format!("Could not open file: {:?}", p));
+        Err(e)
+    })?;
     let reader = BufReader::new(f);
 
     let data = read_data(reader, lax_parsing)?;
