@@ -70,9 +70,14 @@ impl Summarizer {
 
     /// Closest-ranks percentile computed via linear interpolation.
     /// See: http://www.itl.nist.gov/div898/handbook/prc/section2/prc262.htm
+    ///
+    /// According to NIST, there isn't a standard computational definition of percentile.
+    /// We take a practical approach that aims to be both unsurprising and consistent with
+    /// common statistics packages. In particular, our implementation guarantees that the
+    /// boundary percentiles correspond to the sample min and max.
     pub fn percentile(&self, p: f64) -> Result<f64, &'static str> {
         if !p.is_finite() { return Err("Arg must be finite"); }
-        if p < 0.0 || 1.0 <= p {
+        if p < 0.0 || 1.0 < p {
             return Err("Arg must be in the unit interval");
         }
 
@@ -81,6 +86,12 @@ impl Summarizer {
 
         let i = rank.floor() as usize;
         let j = i + 1;
+
+        if j == self.data.len() {
+            // This implies that `i` indexes the largest data point in the sample.
+            // Dereferencing at `j` would be an error, but `i` is exactly the max.
+            return Ok(self.data[i]);
+        }
 
         let xi = self.data[i];
         let xj = self.data[j];
