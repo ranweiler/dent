@@ -1,3 +1,4 @@
+use error::Error;
 use summary::Summarizer;
 
 
@@ -9,12 +10,12 @@ pub struct LinearRegression {
 }
 
 impl LinearRegression {
-    pub fn new(data: &[(f64, f64)]) -> Result<Self, ()> {
+    pub fn new(data: &[(f64, f64)]) -> Result<Self, Error> {
         if data.is_empty() {
-            return Err(());
+            return Err(Error::EmptySample);
         }
 
-        Ok(LinearRegression::simple_lr(data))
+        LinearRegression::simple_lr(data)
     }
 
     pub fn intercept(&self) -> f64 {
@@ -33,13 +34,13 @@ impl LinearRegression {
         self.standard_error
     }
 
-    fn simple_lr(data: &[(f64, f64)]) -> Self {
+    fn simple_lr(data: &[(f64, f64)]) -> Result<Self, Error> {
         let n = data.len() as f64;
 
         let (x, y): (Vec<_,>, Vec<_>) = data.iter().cloned().unzip();
 
-        let summ_x = Summarizer::new(&x).unwrap();
-        let summ_y = Summarizer::new(&y).unwrap();
+        let summ_x = Summarizer::new(&x)?;
+        let summ_y = Summarizer::new(&y)?;
 
         let mean_x = summ_x.mean();
         let mean_y = summ_y.mean();
@@ -59,11 +60,11 @@ impl LinearRegression {
         let df = n - 2.0;
         let standard_error = (slope / df.sqrt()) * (1.0 / r.powi(2) - 1.0).sqrt();
 
-        LinearRegression {
+        Ok(LinearRegression {
             intercept,
             r,
             slope,
             standard_error,
-        }
+        })
     }
 }
