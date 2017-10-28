@@ -263,7 +263,9 @@ macro_rules! lr_kat {
             let y_path = format!("{}/{}-y", "support/data", $name);
             let y = read_data(&y_path);
 
-            let lr = LinearRegression::new(&x, &y).unwrap();
+            let data: Vec<_> = x.iter().cloned().zip(y).collect();
+
+            let lr = LinearRegression::new(&data).unwrap();
 
             let known_path = format!("{}/{}", "support/kat", $name);
             let known = KnownLR::new(&known_path);

@@ -9,16 +9,12 @@ pub struct LinearRegression {
 }
 
 impl LinearRegression {
-    pub fn new(ind: &[f64], dep: &[f64]) -> Result<Self, ()> {
-        if ind.len() != dep.len() {
+    pub fn new(data: &[(f64, f64)]) -> Result<Self, ()> {
+        if data.is_empty() {
             return Err(());
         }
 
-        if ind.len() == 0 {
-            return Err(());
-        }
-
-        Ok(LinearRegression::simple_lr(ind, dep))
+        Ok(LinearRegression::simple_lr(data))
     }
 
     pub fn intercept(&self) -> f64 {
@@ -37,11 +33,13 @@ impl LinearRegression {
         self.standard_error
     }
 
-    fn simple_lr(x: &[f64], y: &[f64]) -> Self {
-        let n = x.len() as f64;
+    fn simple_lr(data: &[(f64, f64)]) -> Self {
+        let n = data.len() as f64;
 
-        let summ_x = Summarizer::new(x).unwrap();
-        let summ_y = Summarizer::new(y).unwrap();
+        let (x, y): (Vec<_,>, Vec<_>) = data.iter().cloned().unzip();
+
+        let summ_x = Summarizer::new(&x).unwrap();
+        let summ_y = Summarizer::new(&y).unwrap();
 
         let mean_x = summ_x.mean();
         let mean_y = summ_y.mean();
