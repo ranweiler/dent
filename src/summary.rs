@@ -70,10 +70,11 @@ impl Summarizer {
 
     /// Closest-ranks percentile computed via linear interpolation.
     /// See: http://www.itl.nist.gov/div898/handbook/prc/section2/prc262.htm
-    pub fn percentile(&self, p: f64) -> Option<f64> {
-        if !p.is_finite() { return None; }
-        if p < 0.0 { return None; }
-        if p >= 1.0 { return None; }
+    pub fn percentile(&self, p: f64) -> Result<f64, &'static str> {
+        if !p.is_finite() { return Err("Arg must be finite"); }
+        if p < 0.0 || 1.0 <= p {
+            return Err("Arg must be in the unit interval");
+        }
 
         let rank = (self.size() - 1.0) * p;
         let frac = rank.fract();
@@ -85,7 +86,7 @@ impl Summarizer {
         let xj = self.data[j];
         let x = xi + frac * (xj - xi);
 
-        Some(x)
+        Ok(x)
     }
 
     /// Uses Bessel's correction to estimate population variance.
