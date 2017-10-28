@@ -77,7 +77,7 @@ fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<error::E
 
     let data = read_data(reader, lax_parsing)?;
 
-    Ok(Summary::new(&data).unwrap())
+    Ok(Summary::new(&data)?)
 }
 
 fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Error>>
@@ -85,7 +85,7 @@ fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Err
     let mut data: Vec<f64> = vec![];
 
     for l in reader.lines() {
-        let s = l.unwrap().trim().to_string();
+        let s = l?.trim().to_string();
 
         if s.is_empty() {
             continue;
@@ -116,7 +116,7 @@ fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
     let stdin = io::stdin();
     let data = read_data(stdin.lock(), lax_parsing)?;
 
-    Ok(Summary::new(&data).unwrap())
+    Ok(Summary::new(&data)?)
 }
 
 fn display_t_test(
@@ -218,8 +218,9 @@ fn main() {
     let summaries = if use_stdin {
         vec![ok!(summarize_stdin(lax_parsing))]
     } else {
+        // Required if `stdin` is not present, so we can unwrap.
         matches.values_of("files")
-            .unwrap()
+            .unwrap_or_else(|| unreachable!())
             .map(|f| ok!(summarize_file(f, lax_parsing)))
             .collect()
     };
@@ -227,7 +228,9 @@ fn main() {
     match summaries.len() {
         0 => unreachable!(),
         2 => {
-            let alpha = parse_alpha(matches.value_of("alpha").unwrap());
+            // Has a default value, so we can can unwrap.
+            let alpha_arg = matches.value_of("alpha").unwrap_or_else(|| unreachable!());
+            let alpha = parse_alpha(alpha_arg);
 
             display_t_test(
                 &summaries[0],
