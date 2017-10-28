@@ -28,7 +28,7 @@ impl Summarizer {
         let mut data = Vec::from(data);
 
         // Won't panic: we have checked that each float is finite.
-        data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        data.sort_by(|a, b| a.partial_cmp(b).unwrap_or_else(|| unreachable!()));
 
         let s = Summarizer { data };
 
@@ -145,14 +145,16 @@ impl Summary {
     ///   - The data are sorted
     ///
     pub fn new(data: &[f64]) -> Result<Self, Error> {
+        // The percentile arguments below are statically known to meet the
+        // `percentile()` bounds, so we can always unwrap.
         Summarizer::new(data).map(|s| Summary {
             len: s.data.len(),
-            lower_quartile: s.percentile(0.25).unwrap(),
+            lower_quartile: s.percentile(0.25).unwrap_or_else(|_| unreachable!()),
             min: s.min(),
             max: s.max(),
             mean: s.mean(),
             median: s.median(),
-            upper_quartile: s.percentile(0.75).unwrap(),
+            upper_quartile: s.percentile(0.75).unwrap_or_else(|_| unreachable!()),
             unbiased_variance: s.unbiased_variance(),
             standard_deviation: s.standard_deviation(),
             standard_error: s.standard_error(),
