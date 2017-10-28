@@ -100,16 +100,16 @@ fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Err
     Ok(data)
 }
 
-fn parse_alpha(arg: &str) -> SigLevel {
-    match arg {
+fn parse_alpha(arg: &str) -> Result<SigLevel, String> {
+    Ok(match arg {
         ".001" => SigLevel::Alpha001,
         ".005" => SigLevel::Alpha005,
         ".01"  => SigLevel::Alpha010,
         ".025" => SigLevel::Alpha025,
         ".05"  => SigLevel::Alpha050,
         ".1"   => SigLevel::Alpha100,
-        _ => panic!(),
-    }
+        _ => return Err(format!("Invalid value for α: {:?}", arg))
+    })
 }
 
 fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
@@ -231,7 +231,7 @@ fn main() {
         2 => {
             // Has a default value, so we can can unwrap.
             let alpha_arg = matches.value_of("alpha").unwrap_or_else(|| unreachable!());
-            let alpha = parse_alpha(alpha_arg);
+            let alpha = ok!(parse_alpha(alpha_arg));
 
             display_t_test(
                 &summaries[0],
