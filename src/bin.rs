@@ -227,6 +227,7 @@ fn main() {
 
     match summaries.len() {
         0 => unreachable!(),
+        // We want match 1 with the case `len()` > 2.
         2 => {
             // Has a default value, so we can can unwrap.
             let alpha_arg = matches.value_of("alpha").unwrap_or_else(|| unreachable!());
