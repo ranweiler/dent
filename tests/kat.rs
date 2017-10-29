@@ -1,7 +1,6 @@
 extern crate dent;
 
-#[macro_use]
-mod common;
+#[macro_use] mod support;
 
 
 summary_kat!(summary_kat1, "1.1_0.1_100");

@@ -1,21 +1,7 @@
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::Path;
 
-
-pub fn read_data(path: &str) -> Vec<f64> {
-    let p = Path::new(path);
-    let f = File::open(p).ok().unwrap();
-    let r = BufReader::new(f);
-
-    let data: Vec<f64> = r
-        .lines()
-        .map(|l| l.ok().unwrap().parse().unwrap())
-        .collect();
-
-    data
-}
 
 #[derive(Debug, Default)]
 pub struct KnownSummary {
@@ -34,15 +20,14 @@ pub struct KnownSummary {
 
 impl KnownSummary {
     pub fn new(path: &str) -> Self {
-        let p = Path::new(path);
-        let f = File::open(p).ok().unwrap();
+        let f = File::open(path).unwrap();
         let r = BufReader::new(f);
 
         let mut known = KnownSummary::default();
         let mut keys_read: HashSet<String> = HashSet::new();
 
         for l in r.lines() {
-            let pieces: Vec<String> = l.ok().unwrap().split('\t').map(|s| s.to_string()).collect();
+            let pieces: Vec<String> = l.unwrap().split('\t').map(|s| s.to_string()).collect();
             assert_eq!(pieces.len(), 2, "Invalid line in known answer file");
 
             let key = pieces[0].to_string();
@@ -92,15 +77,14 @@ pub struct KnownTTest {
 
 impl KnownTTest {
     pub fn new(path: &str) -> Self {
-        let p = Path::new(path);
-        let f = File::open(p).ok().unwrap();
+        let f = File::open(path).unwrap();
         let r = BufReader::new(f);
 
         let mut known = KnownTTest::default();
         let mut keys_read: HashSet<String> = HashSet::new();
 
         for l in r.lines() {
-            let pieces: Vec<String> = l.ok().unwrap().split('\t').map(|s| s.to_string()).collect();
+            let pieces: Vec<String> = l.unwrap().split('\t').map(|s| s.to_string()).collect();
             assert_eq!(pieces.len(), 2, "Invalid line in known answer file");
 
             let key = pieces[0].to_string();
@@ -134,8 +118,7 @@ pub struct KnownLR {
 
 impl KnownLR {
     pub fn new(path: &str) -> Self {
-        let p = Path::new(path);
-        let f = File::open(p).ok().unwrap();
+        let f = File::open(path).unwrap();
         let r = BufReader::new(f);
 
         let mut known = KnownLR::default();
@@ -167,6 +150,7 @@ impl KnownLR {
     }
 }
 
+#[macro_export]
 macro_rules! assert_appx_eq {
     ($name:expr, $tolerance:expr, $known:expr, $actual:expr) => {
         let d = ($known - $actual).abs();
@@ -184,7 +168,8 @@ macro_rules! summary_kat {
         #[test]
         fn $test_name() {
             use dent::summary::Summarizer;
-            use $crate::common::{KnownSummary, read_data};
+            use $crate::support::kat::KnownSummary;
+            use $crate::support::fs::read_data;
 
             let data_path = format!("{}/{}", "support/data", $name);
             let data = read_data(&data_path);
@@ -230,7 +215,8 @@ macro_rules! t_test_kat {
         fn $test_name() {
             use dent::summary::Summary;
             use dent::t_test::{SigLevel, welch_t_test};
-            use $crate::common::{KnownTTest, read_data};
+            use $crate::support::kat::KnownTTest;
+            use $crate::support::fs::read_data;
 
             let known_path = format!("{}/{}", "support/kat", $name);
             let known = KnownTTest::new(&known_path);
@@ -259,7 +245,8 @@ macro_rules! lr_kat {
         #[test]
         fn $test_name() {
             use dent::lr::LinearRegression;
-            use $crate::common::{KnownLR, read_data};
+            use $crate::support::kat::KnownLR;
+            use $crate::support::fs::read_data;
 
             let x_path = format!("{}/{}-x", "support/data", $name);
             let x = read_data(&x_path);
