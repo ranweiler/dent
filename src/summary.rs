@@ -1,3 +1,6 @@
+use error::Error;
+
+
 #[derive(Debug)]
 pub struct Summarizer {
     data: Vec<f64>,
@@ -13,23 +16,23 @@ impl Summarizer {
     ///   - All values are finite
     ///   - The data are sorted
     ///
-    pub fn new(data: &[f64]) -> Option<Self> {
-        if data.len() == 0 {
-            return None;
+    pub fn new(data: &[f64]) -> Result<Self, Error> {
+        if data.is_empty() {
+            return Err(Error::EmptySample);
         }
 
         if data.iter().any(|x| !x.is_finite()) {
-            return None;
+            return Err(Error::BadSample);
         }
 
         let mut data = Vec::from(data);
 
         // Won't panic: we have checked that each float is finite.
-        data.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        data.sort_by(|a, b| a.partial_cmp(b).unwrap_or_else(|| unreachable!()));
 
         let s = Summarizer { data };
 
-        Some(s)
+        Ok(s)
     }
 
     pub fn as_slice(&self) -> &[f64] {
@@ -67,10 +70,16 @@ impl Summarizer {
 
     /// Closest-ranks percentile computed via linear interpolation.
     /// See: http://www.itl.nist.gov/div898/handbook/prc/section2/prc262.htm
-    pub fn percentile(&self, p: f64) -> Option<f64> {
-        if !p.is_finite() { return None; }
-        if p < 0.0 { return None; }
-        if p >= 1.0 { return None; }
+    ///
+    /// According to NIST, there isn't a standard computational definition of percentile.
+    /// We take a practical approach that aims to be both unsurprising and consistent with
+    /// common statistics packages. In particular, our implementation guarantees that the
+    /// boundary percentiles correspond to the sample min and max.
+    pub fn percentile(&self, p: f64) -> Result<f64, &'static str> {
+        if !p.is_finite() { return Err("Arg must be finite"); }
+        if p < 0.0 || 1.0 < p {
+            return Err("Arg must be in the unit interval");
+        }
 
         let rank = (self.size() - 1.0) * p;
         let frac = rank.fract();
@@ -78,11 +87,17 @@ impl Summarizer {
         let i = rank.floor() as usize;
         let j = i + 1;
 
+        if j == self.data.len() {
+            // This implies that `i` indexes the largest data point in the sample.
+            // Dereferencing at `j` would be an error, but `i` is exactly the max.
+            return Ok(self.data[i]);
+        }
+
         let xi = self.data[i];
         let xj = self.data[j];
         let x = xi + frac * (xj - xi);
 
-        Some(x)
+        Ok(x)
     }
 
     /// Uses Bessel's correction to estimate population variance.
@@ -129,15 +144,17 @@ impl Summary {
     ///   - All values are finite
     ///   - The data are sorted
     ///
-    pub fn new(data: &[f64]) -> Option<Self> {
+    pub fn new(data: &[f64]) -> Result<Self, Error> {
+        // The percentile arguments below are statically known to meet the
+        // `percentile()` bounds, so we can always unwrap.
         Summarizer::new(data).map(|s| Summary {
             len: s.data.len(),
-            lower_quartile: s.percentile(0.25).unwrap(),
+            lower_quartile: s.percentile(0.25).unwrap_or_else(|_| unreachable!()),
             min: s.min(),
             max: s.max(),
             mean: s.mean(),
             median: s.median(),
-            upper_quartile: s.percentile(0.75).unwrap(),
+            upper_quartile: s.percentile(0.75).unwrap_or_else(|_| unreachable!()),
             unbiased_variance: s.unbiased_variance(),
             standard_deviation: s.standard_deviation(),
             standard_error: s.standard_error(),

@@ -205,10 +205,14 @@ macro_rules! summary_kat {
                             known.median, summary.median());
             assert_appx_eq!("Mean", precision,
                             known.mean, summary.mean());
+            assert_appx_eq!("0th percentile", precision,
+                            known.min, summary.percentile(0.0).unwrap());
             assert_appx_eq!("Lower quartile", precision,
                             known.lower_quartile, summary.percentile(0.25).unwrap());
             assert_appx_eq!("Upper quartile", precision,
                             known.upper_quartile, summary.percentile(0.75).unwrap());
+            assert_appx_eq!("100th percentile", precision,
+                            known.max, summary.percentile(1.0).unwrap());
             assert_appx_eq!("Variance", precision,
                             known.variance, summary.unbiased_variance());
             assert_appx_eq!("Standard deviation", precision,
@@ -263,7 +267,9 @@ macro_rules! lr_kat {
             let y_path = format!("{}/{}-y", "support/data", $name);
             let y = read_data(&y_path);
 
-            let lr = LinearRegression::new(&x, &y).unwrap();
+            let data: Vec<_> = x.iter().cloned().zip(y).collect();
+
+            let lr = LinearRegression::new(&data).unwrap();
 
             let known_path = format!("{}/{}", "support/kat", $name);
             let known = KnownLR::new(&known_path);

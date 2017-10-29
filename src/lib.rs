@@ -1,5 +1,6 @@
 extern crate stamp;
 
+pub mod error;
 pub mod lr;
 pub mod plot;
 pub mod summary;

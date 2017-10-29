@@ -1,8 +1,18 @@
 mod figure;
 
 use stamp;
+
 use summary::Summary;
 
+
+macro_rules! plot {
+    ($p: expr) => {
+        match $p {
+            Ok(t) => Ok(t),
+            Err(_) => Err("Unable to plot sample data"),
+        }
+    }
+}
 
 struct Boxplot {
     box_lo: f64,
@@ -94,7 +104,7 @@ struct BoxplotChars {
 }
 
 impl BoxplotChars {
-    pub fn render(&self, summary: &Summary, width: usize) -> String {
+    pub fn render(&self, summary: &Summary, width: usize) -> Result<String, &'static str> {
         let data = Boxplot::from_summary(summary);
         let cols = BoxplotCols::new(&data, width);
 
@@ -106,11 +116,11 @@ impl BoxplotChars {
 
         let no_marker = plot.render();
 
-        let base = stamp::Stamp::new(&no_marker).unwrap();
-        let marker = stamp::Stamp::new(self.marker).unwrap();
-        let layered = base.layer(&marker, cols.marker, 1).unwrap();
+        let base = plot!(stamp::Stamp::new(&no_marker))?;
+        let marker = plot!(stamp::Stamp::new(self.marker))?;
+        let layered = plot!(base.layer(&marker, cols.marker, 1))?;
 
-        layered.render()
+        Ok(layered.render())
     }
 }
 
@@ -219,7 +229,7 @@ impl Plot {
     }
 }
 
-pub fn summary_plot(summary: &Summary, width: usize, ascii: bool) -> String {
+pub fn summary_plot(summary: &Summary, width: usize, ascii: bool) -> Result<String, &'static str> {
     let plot_style = if ascii { &ASCII_CHARS } else { &UNICODE_CHARS };
 
     plot_style.render(summary, width)
@@ -230,8 +240,10 @@ pub fn comparison_plot(
     width: usize,
     ascii: bool,
     border: bool,
-) -> String {
-    if summaries.is_empty() { unreachable!(); }
+) -> Result<String, &'static str> {
+    if summaries.is_empty() {
+        return Err("Cannot plot empty list of summaries");
+    }
 
     let padding = if border { 2 } else { 0 };
     let border_style = if ascii {
@@ -249,7 +261,7 @@ pub fn comparison_plot(
     for s in summaries {
         let p = (s.max() - s.min()) / range;
         let w = (p * (width as f64)).floor() as usize - (padding * 2); // could underflow
-        let plot = stamp::Stamp::new(&summary_plot(s, w, ascii)).unwrap();
+        let plot = plot!(stamp::Stamp::new(&summary_plot(s, w, ascii)?))?;
         let left_padding = {
             let lpp = (s.min() - min) / range;
             (lpp * (width as f64)).floor() as usize
@@ -268,11 +280,11 @@ pub fn comparison_plot(
         figure::Filled::blank(width, height).render()
     };
 
-    let mut all_plots = stamp::Stamp::new(&base).unwrap();
+    let mut all_plots = plot!(stamp::Stamp::new(&base))?;
 
     for (i, &(ref plot, left_padding)) in plots.iter().enumerate() {
-        all_plots = all_plots.layer(&plot, left_padding, padding + i * plot.height()).unwrap();
+        all_plots = plot!(all_plots.layer(&plot, left_padding, padding + i * plot.height()))?;
     }
 
-    all_plots.render()
+    Ok(all_plots.render())
 }
