@@ -52,3 +52,13 @@ fn test_lax() {
         assert::exit_ok(&exe::run(&[path, "--lax"]));
     }
 }
+
+#[test]
+fn test_comparison() {
+    let path = &fixture::path("all_numeric_lines");
+    let out = exe::run(&[path, path]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "comparison.out");
+}
