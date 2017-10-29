@@ -73,3 +73,37 @@ fn test_comparison_plot() {
     assert::stderr_is_empty(&out);
     assert::stdout_eq_file(&out, "comparison_plot.out");
 }
+
+#[test]
+fn test_plot_one() {
+    let path = &fixture::path("normal_0_1");
+    let out = exe::run(&["-p", "-w", "90", path]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "plot_one.out");
+}
+
+#[test]
+fn test_plot_one_long() {
+    let path = &fixture::path("normal_0_1");
+    let out = exe::run(&["--plot", "-w", "90", path]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "plot_one.out");
+}
+
+#[test]
+fn test_plot_many() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_5_2"),
+        fixture::path("normal_3_1"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", &paths[0], &paths[1], &paths[2]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "plot_many.out");
+}
