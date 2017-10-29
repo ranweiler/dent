@@ -131,7 +131,7 @@ fn display_t_test(
     let t_test = welch_t_test(&summary1, &summary2, alpha);
 
     if draw_plot {
-        let p = plot::comparison_plot(&[summary1, summary2], width, ascii, true);
+        let p = ok!(plot::comparison_plot(&[summary1, summary2], width, ascii, true));
         println!("{}\n", p);
     }
 
@@ -153,7 +153,7 @@ fn display_summaries(
             .iter()
             .collect();
 
-        let plot = plot::comparison_plot(&summary_refs, width, ascii, true);
+        let plot = ok!(plot::comparison_plot(&summary_refs, width, ascii, true));
         println!("{}\n", plot);
     }
 
