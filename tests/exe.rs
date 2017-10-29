@@ -62,3 +62,14 @@ fn test_comparison() {
     assert::stderr_is_empty(&out);
     assert::stdout_eq_file(&out, "comparison.out");
 }
+
+#[test]
+fn test_comparison_plot() {
+    let path1 = &fixture::path("normal_0_1");
+    let path2 = &fixture::path("normal_5_2");
+    let out = exe::run(&["-p", "-w", "90", path1, path2]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "comparison_plot.out");
+}
