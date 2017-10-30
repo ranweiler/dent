@@ -85,16 +85,6 @@ fn test_plot_one() {
 }
 
 #[test]
-fn test_plot_one_long() {
-    let path = &fixture::path("normal_0_1");
-    let out = exe::run(&["--plot", "-w", "90", path]);
-
-    assert::exit_ok(&out);
-    assert::stderr_is_empty(&out);
-    assert::stdout_eq_file(&out, "plot_one.out");
-}
-
-#[test]
 fn test_plot_many() {
     let paths = vec![
         fixture::path("normal_0_1"),
