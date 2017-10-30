@@ -78,23 +78,40 @@ struct RowChars {
 
 impl RowChars {
     pub fn render(&self, row: &mut Vec<String>, cols: &BoxplotCols) {
-        row[cols.wh_lo] = self.wh_lo.to_string();
+        // Lower whisker extent.
         for i in (cols.wh_lo + 1)..cols.box_lo {
             row[i] = self.wh_lo_box_lo_fill.to_string();
         }
-        row[cols.box_lo] = self.box_lo.to_string();
-        for i in (cols.box_lo + 1)..cols.box_mid {
-            row[i] = self.box_lo_box_mid_fill.to_string();
-        }
-        row[cols.box_mid] = self.box_mid.to_string();
-        for i in (cols.box_mid + 1)..cols.box_hi {
-            row[i] = self.box_mid_box_hi_fill.to_string();
-        }
-        row[cols.box_hi] = self.box_hi.to_string();
+
+        // Upper whisker extent.
         for i in (cols.box_hi + 1)..cols.wh_hi {
             row[i] = self.box_hi_wh_hi_fill.to_string();
         }
+
+        // Lower box extent.
+        for i in (cols.box_lo + 1)..cols.box_mid {
+            row[i] = self.box_lo_box_mid_fill.to_string();
+        }
+
+        // Upper box extent.
+        for i in (cols.box_mid + 1)..cols.box_hi {
+            row[i] = self.box_mid_box_hi_fill.to_string();
+        }
+
+        // Lower box end.
+        row[cols.box_lo] = self.box_lo.to_string();
+
+        // Upper box end.
+        row[cols.box_hi] = self.box_hi.to_string();
+
+        // Lower whisker end.
+        row[cols.wh_lo] = self.wh_lo.to_string();
+
+        // Upper whisker end.
         row[cols.wh_hi] = self.wh_hi.to_string();
+
+        // Middle line.
+        row[cols.box_mid] = self.box_mid.to_string();
     }
 }
 
