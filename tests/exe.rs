@@ -85,16 +85,6 @@ fn test_plot_one() {
 }
 
 #[test]
-fn test_plot_one_long() {
-    let path = &fixture::path("normal_0_1");
-    let out = exe::run(&["--plot", "-w", "90", path]);
-
-    assert::exit_ok(&out);
-    assert::stderr_is_empty(&out);
-    assert::stdout_eq_file(&out, "plot_one.out");
-}
-
-#[test]
 fn test_plot_many() {
     let paths = vec![
         fixture::path("normal_0_1"),
@@ -106,4 +96,44 @@ fn test_plot_many() {
     assert::exit_ok(&out);
     assert::stderr_is_empty(&out);
     assert::stdout_eq_file(&out, "plot_many.out");
+}
+
+#[test]
+fn test_plot_far_apart() {
+    let paths = vec![
+        fixture::path("near_0"),
+        fixture::path("near_1000"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "far_apart.out");
+}
+
+#[test]
+fn test_plot_mod_outlier() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_0_1_mod_outlier"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "mod_outlier.out");
+}
+
+
+#[test]
+fn test_plot_ext_outlier() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_0_1_ext_outlier"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "ext_outlier.out");
 }

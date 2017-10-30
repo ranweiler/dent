@@ -78,23 +78,40 @@ struct RowChars {
 
 impl RowChars {
     pub fn render(&self, row: &mut Vec<String>, cols: &BoxplotCols) {
-        row[cols.wh_lo] = self.wh_lo.to_string();
+        // Lower whisker extent.
         for i in (cols.wh_lo + 1)..cols.box_lo {
             row[i] = self.wh_lo_box_lo_fill.to_string();
         }
-        row[cols.box_lo] = self.box_lo.to_string();
-        for i in (cols.box_lo + 1)..cols.box_mid {
-            row[i] = self.box_lo_box_mid_fill.to_string();
-        }
-        row[cols.box_mid] = self.box_mid.to_string();
-        for i in (cols.box_mid + 1)..cols.box_hi {
-            row[i] = self.box_mid_box_hi_fill.to_string();
-        }
-        row[cols.box_hi] = self.box_hi.to_string();
+
+        // Upper whisker extent.
         for i in (cols.box_hi + 1)..cols.wh_hi {
             row[i] = self.box_hi_wh_hi_fill.to_string();
         }
+
+        // Lower box extent.
+        for i in (cols.box_lo + 1)..cols.box_mid {
+            row[i] = self.box_lo_box_mid_fill.to_string();
+        }
+
+        // Upper box extent.
+        for i in (cols.box_mid + 1)..cols.box_hi {
+            row[i] = self.box_mid_box_hi_fill.to_string();
+        }
+
+        // Lower box end.
+        row[cols.box_lo] = self.box_lo.to_string();
+
+        // Upper box end.
+        row[cols.box_hi] = self.box_hi.to_string();
+
+        // Lower whisker end.
+        row[cols.wh_lo] = self.wh_lo.to_string();
+
+        // Upper whisker end.
         row[cols.wh_hi] = self.wh_hi.to_string();
+
+        // Middle line.
+        row[cols.box_mid] = self.box_mid.to_string();
     }
 }
 
@@ -246,27 +263,40 @@ pub fn comparison_plot(
     }
 
     let padding = if border { 2 } else { 0 };
+    let content_width = (width - 2 * padding) as f64;
     let border_style = if ascii {
         figure::ASCII_BORDER
     } else {
         figure::UNICODE_BORDER
     };
+
     use std::f64;
     let min = summaries.iter().map(|s| s.min()).fold(f64::MAX, |x, y| x.min(y));
     let max = summaries.iter().map(|s| s.max()).fold(f64::MIN, |x, y| x.max(y));
+
+    // Used to compute relative widths of boxplots from their own ranges.
     let range = max - min;
 
     let mut plots = vec![];
 
     for s in summaries {
+        // Proportion of total content width spanned by this plot.
         let p = (s.max() - s.min()) / range;
-        let w = (p * (width as f64)).floor() as usize - (padding * 2); // could underflow
-        let plot = plot!(stamp::Stamp::new(&summary_plot(s, w, ascii)?))?;
-        let left_padding = {
-            let lpp = (s.min() - min) / range;
-            (lpp * (width as f64)).floor() as usize
-        } + padding;
-        plots.push((plot, left_padding));
+
+        // Boxplot content width in cols.
+        let w = (content_width * p).floor().max(1.0);
+        assert!(1.0 <= w);
+        assert!(w <= content_width);
+
+        let plot = plot!(stamp::Stamp::new(&summary_plot(s, w as usize, ascii)?))?;
+
+        assert!(min <= s.min());
+        let offset_p = (s.min() - min) / range;
+
+        let offset = (offset_p * content_width).min(content_width - w);
+        assert!(offset + w <= content_width);
+
+        plots.push((plot, padding + (offset as usize)));
     }
 
     let height = &plots
@@ -282,8 +312,8 @@ pub fn comparison_plot(
 
     let mut all_plots = plot!(stamp::Stamp::new(&base))?;
 
-    for (i, &(ref plot, left_padding)) in plots.iter().enumerate() {
-        all_plots = plot!(all_plots.layer(&plot, left_padding, padding + i * plot.height()))?;
+    for (i, &(ref plot, left_offset)) in plots.iter().enumerate() {
+        all_plots = plot!(all_plots.layer(&plot, left_offset, padding + i * plot.height()))?;
     }
 
     Ok(all_plots.render())
