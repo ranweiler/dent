@@ -107,3 +107,16 @@ fn test_plot_many() {
     assert::stderr_is_empty(&out);
     assert::stdout_eq_file(&out, "plot_many.out");
 }
+
+#[test]
+fn test_plot_far_apart() {
+    let paths = vec![
+        fixture::path("near_0"),
+        fixture::path("near_1000"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "far_apart.out");
+}
