@@ -260,7 +260,14 @@ pub fn comparison_plot(
 
     for s in summaries {
         let p = (s.max() - s.min()) / range;
-        let w = (p * (width as f64)).floor() as usize - (padding * 2); // could underflow
+
+        let w_max = (p * (width as f64)).floor() as usize;
+        let w_padding = padding * 2;
+        let w = if w_padding <= w_max { w_max - w_padding } else { 1 };
+
+        assert!(1 <= w);
+        assert!(w <= width);
+
         let plot = plot!(stamp::Stamp::new(&summary_plot(s, w, ascii)?))?;
         let left_padding = {
             let lpp = (s.min() - min) / range;
