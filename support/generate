@@ -66,12 +66,12 @@ def write_summary(path, summary):
 
 
 def t_test(x, y):
-    t, _ = stats.ttest_ind(x, y, equal_var=False)
+    t, p = stats.ttest_ind(x, y, equal_var=False)
 
-    return t
+    return t, p
 
 
-def write_t_test(path1, path2, t):
+def write_t_test(path1, path2, t, p):
     name1 = os.path.basename(path1)
     name2 = os.path.basename(path2)
 
@@ -82,6 +82,7 @@ def write_t_test(path1, path2, t):
         f.write('src1\t{}\n'.format(name1))
         f.write('src2\t{}\n'.format(name2))
         f.write('t\t{}\n'.format(t))
+        f.write('p\t{}\n'.format(p))
 
 
 # See: http://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm
@@ -130,13 +131,13 @@ def make_summary_kats(path):
         write_summary(p, s)
 
 
-def make_t_test_kats(path):
+def make_t_test_kats(paths):
     for (p1, p2) in combinations(paths, r=2):
         d1 = read(p1)
         d2 = read(p2)
-        t = t_test(d1, d2)
+        t, p = t_test(d1, d2)
 
-        write_t_test(p1, p2, t)
+        write_t_test(p1, p2, t, p)
 
 
 def write_lr_data(ps, x, y):
@@ -190,7 +191,7 @@ def make_kats():
     paths = [os.path.join(data_dir, f) for f in os.listdir(data_dir)]
 
     make_summary_kat(paths)
-    make_t_test_kat(paths)
+    make_t_test_kats(paths)
     make_lr_kats()
 
 
