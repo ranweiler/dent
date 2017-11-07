@@ -37,6 +37,8 @@ fn beta(a: f64, b: f64) -> f64 {
 pub fn inc_beta(x: f64, a: f64, b: f64) -> Result<f64, Error> {
     if x < 0.0 { return Err(Error::Undefined); }
     if 1.0 < x { return Err(Error::Undefined); }
+    if a <= 0.0 { return Err(Error::Undefined); }
+    if b <= 0.0 { return Err(Error::Undefined); }
 
     let bound = (a + 1.0) / (a + b + 2.0);
     let ib = if x < bound {
