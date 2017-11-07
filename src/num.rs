@@ -1,3 +1,5 @@
+use error::Error;
+
 mod cmath {
     extern {
         pub fn lgamma(z: f64) -> f64;
@@ -32,9 +34,9 @@ fn beta(a: f64, b: f64) -> f64 {
 /// [2]: "Numerical Recipes in C", 2nd Ed., p. 171
 /// [3]: http://dlmf.nist.gov/8.17#E22
 /// [4]: http://dlmf.nist.gov/8.17#E4
-pub fn inc_beta(x: f64, a: f64, b: f64) -> Result<f64, ()> {
-    if x < 0.0 { return Err(()); }
-    if 1.0 < x { return Err(()); }
+pub fn inc_beta(x: f64, a: f64, b: f64) -> Result<f64, Error> {
+    if x < 0.0 { return Err(Error::Undefined); }
+    if 1.0 < x { return Err(Error::Undefined); }
 
     let bound = (a + 1.0) / (a + b + 2.0);
     let ib = if x < bound {
@@ -61,7 +63,7 @@ const INC_BETA_MAX_ITER: usize = 1000;
 /// modified Lentz's algorithm.
 ///
 /// [1]: http://dlmf.nist.gov/8.17#E22
-fn inc_beta_cf(x: f64, a: f64, b: f64) -> Result<f64, ()> {
+fn inc_beta_cf(x: f64, a: f64, b: f64) -> Result<f64, Error> {
     let mut f = INC_BETA_CF_APPX_ZERO;
     let mut c = f;
     let mut d = 0.0;
@@ -79,7 +81,7 @@ fn inc_beta_cf(x: f64, a: f64, b: f64) -> Result<f64, ()> {
         d = next.2;
     }
 
-    Err(())
+    Err(Error::Diverged)
 }
 
 /// Compute the next partial evaluation of the continued fraction, given the last.
