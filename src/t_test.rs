@@ -48,11 +48,11 @@ fn welch_satterthwaite_df(var1: f64, n1: f64, var2: f64, n2: f64) -> f64 {
     appx
 }
 
-fn t_cdf(t: f64, v: f64) -> Result<f64, Error> {
+fn t_cdf(t: f64, df: f64) -> Result<f64, Error> {
     use num;
 
-    let x = v / (v + t.powi(2));
-    let a = 0.5 * v;
+    let x = df / (df + t.powi(2));
+    let a = 0.5 * df;
     let b = 0.5;
     let ib = num::inc_beta(x, a, b)?;
 
