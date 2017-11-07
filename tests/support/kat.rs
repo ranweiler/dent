@@ -231,7 +231,7 @@ macro_rules! t_test_kat {
             let data2 = read_data(&data_path2);
             let summary2 = Summary::new(&data2).unwrap();
 
-            let t_test = welch_t_test(&summary1, &summary2);
+            let t_test = welch_t_test(&summary1, &summary2).unwrap();
 
             let precision = 1e-11 ;
             println!("df = {}", t_test.df);

@@ -112,7 +112,7 @@ fn display_t_test(
     width: usize,
     ascii: bool,
 ) {
-    let t_test = welch_t_test(&summary1, &summary2);
+    let t_test = ok!(welch_t_test(&summary1, &summary2));
 
     if draw_plot {
         let p = ok!(plot::comparison_plot(&[summary1, summary2], width, ascii, true));
