@@ -39,8 +39,10 @@ impl Boxplot {
     }
 
     fn from_summary_no_outliers(summary: &Summary) -> Self {
-        let range = summary.max_non_outlier() - summary.min_non_outlier();
-        let n = |x| (x - summary.min_non_outlier()) / range;
+        let min = summary.min_non_outlier().min(summary.mean());
+        let max = summary.max_non_outlier().max(summary.mean());
+        let range = max - min;
+        let n = |x| (x - min) / range;
 
         Boxplot {
             box_lo: n(summary.lower_quartile()),
@@ -143,7 +145,6 @@ impl BoxplotChars {
             Boxplot::from_summary_no_outliers(summary)
         };
         let cols = BoxplotCols::new(&data, width);
-
         let mut plot = Plot::new(width);
 
         self.rows[0].render(&mut plot.0, &cols);
@@ -293,13 +294,21 @@ pub fn comparison_plot(
 
     use std::f64;
 
-    let plot_min = if outliers { Summary::min } else { Summary::min_non_outlier };
+    let plot_min = |s: &Summary| if outliers {
+        s.min()
+    } else {
+        s.min_non_outlier().min(s.mean())
+    };
     let min = summaries
         .iter()
         .map(|s| plot_min(s))
         .fold(f64::MAX, |x, y| x.min(y));
 
-    let plot_max = if outliers { Summary::max } else { Summary::max_non_outlier };
+    let plot_max = |s: &Summary| if outliers {
+        s.max()
+    } else {
+        s.max_non_outlier().max(s.mean())
+    };
     let max = summaries
         .iter()
         .map(|s| plot_max(s))
@@ -311,8 +320,16 @@ pub fn comparison_plot(
     let mut plots = vec![];
 
     for s in summaries {
-        let s_min = if outliers { s.min() } else { s.min_non_outlier() };
-        let s_max = if outliers { s.max() } else { s.max_non_outlier() };
+        let s_min = if outliers {
+            s.min()
+        } else {
+            s.min_non_outlier().min(s.mean())
+        };
+        let s_max = if outliers {
+            s.max()
+        } else {
+            s.max_non_outlier().max(s.mean())
+        };
 
         // Proportion of total content width spanned by this plot.
         let p = (s_max - s_min) / range;
