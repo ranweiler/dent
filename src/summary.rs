@@ -126,7 +126,9 @@ pub struct Summary {
     len: usize,
     lower_quartile: f64,
     min: f64,
+    min_non_outlier: f64,
     max: f64,
+    max_non_outlier: f64,
     mean: f64,
     median: f64,
     standard_deviation: f64,
@@ -154,12 +156,31 @@ impl Summary {
         let q3 = s.percentile(0.75).unwrap_or_else(|_| unreachable!());
         let iqr = q3 - q1;
 
+        let lower_outlier_bound = q1 - 1.5 * iqr;
+        let min_non_outlier = s
+            .as_slice()
+            .iter()
+            .cloned()
+            .find(|&x| lower_outlier_bound <= x)
+            .unwrap_or_else(|| unreachable!());  // By definition of quartile.
+
+        let upper_outlier_bound = q3 + 1.5 * iqr;
+        let max_non_outlier = s
+            .as_slice()
+            .iter()
+            .cloned()
+            .rev()
+            .find(|&x| x <= upper_outlier_bound)
+            .unwrap_or_else(|| unreachable!());  // By definition of quartile.
+
         Ok(Summary {
             iqr: iqr,
             len: s.data.len(),
             lower_quartile: q1,
             min: s.min(),
+            min_non_outlier: min_non_outlier,
             max: s.max(),
+            max_non_outlier: max_non_outlier,
             mean: s.mean(),
             median: s.median(),
             upper_quartile: q3,
@@ -189,8 +210,16 @@ impl Summary {
         self.min
     }
 
+    pub fn min_non_outlier(&self) -> f64 {
+        self.min_non_outlier
+    }
+
     pub fn max(&self) -> f64 {
         self.max
+    }
+
+    pub fn max_non_outlier(&self) -> f64 {
+        self.max_non_outlier
     }
 
     pub fn mean(&self) -> f64 {
