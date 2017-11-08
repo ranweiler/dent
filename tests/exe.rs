@@ -75,6 +75,17 @@ fn test_comparison_plot() {
 }
 
 #[test]
+fn test_comparison_plot_outliers() {
+    let path1 = &fixture::path("normal_0_1");
+    let path2 = &fixture::path("normal_5_2");
+    let out = exe::run(&["-p", "-w", "90", "--outliers", path1, path2]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "comparison_plot_outliers.out");
+}
+
+#[test]
 fn test_plot_one() {
     let path = &fixture::path("normal_0_1");
     let out = exe::run(&["-p", "-w", "90", path]);
@@ -124,6 +135,19 @@ fn test_plot_mod_outlier() {
     assert::stdout_eq_file(&out, "mod_outlier.out");
 }
 
+#[test]
+fn test_plot_mod_outlier_plot_outliers() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_0_1_mod_outlier"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", "--outliers", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "mod_outlier_plot_outliers.out");
+}
+
 
 #[test]
 fn test_plot_ext_outlier() {
@@ -136,4 +160,17 @@ fn test_plot_ext_outlier() {
     assert::exit_ok(&out);
     assert::stderr_is_empty(&out);
     assert::stdout_eq_file(&out, "ext_outlier.out");
+}
+
+#[test]
+fn test_plot_ext_outlier_plot_outliers() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_0_1_ext_outlier"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", "--outliers", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "ext_outlier_plot_outliers.out");
 }
