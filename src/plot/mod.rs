@@ -243,7 +243,7 @@ fn make_row(width: usize) -> Vec<String> {
     use std::iter::repeat;
 
     let mut row = vec![];
-    row.extend(repeat(String::from("")).take(width));
+    row.extend(repeat(String::from(" ")).take(width));
 
     row
 }
