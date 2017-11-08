@@ -43,12 +43,42 @@ impl Summarizer {
         self.data.len() as f64
     }
 
+    pub fn iqr(&self) -> f64 {
+        self.upper_quartile() - self.lower_quartile()
+    }
+
+    pub fn lower_quartile(&self) -> f64 {
+        // Statically known to be defined.
+        self.percentile(0.25).unwrap_or_else(|_| unreachable!())
+    }
+
     pub fn min(&self) -> f64 {
         self.data[0]
     }
 
+    pub fn min_non_outlier(&self) -> f64 {
+        let lower_outlier_bound = self.lower_quartile() - 1.5 * self.iqr();
+
+        self.data
+            .iter()
+            .cloned()
+            .find(|&x| lower_outlier_bound <= x)
+            .unwrap_or_else(|| unreachable!())  // By definition of quartile.
+    }
+
     pub fn max(&self) -> f64 {
         self.data[self.data.len() - 1]
+    }
+
+    pub fn max_non_outlier(&self) -> f64 {
+        let upper_outlier_bound = self.upper_quartile() + 1.5 * self.iqr();
+
+        self.data
+            .iter()
+            .cloned()
+            .rev()
+            .find(|&x| x <= upper_outlier_bound)
+            .unwrap_or_else(|| unreachable!())  // By definition of quartile.
     }
 
     pub fn mean(&self) -> f64 {
@@ -100,6 +130,15 @@ impl Summarizer {
         Ok(x)
     }
 
+    pub fn range(&self) -> f64 {
+        self.max() - self.min()
+    }
+
+    pub fn upper_quartile(&self) -> f64 {
+        // Statically known to be defined.
+        self.percentile(0.75).unwrap_or_else(|_| unreachable!())
+    }
+
     /// Uses Bessel's correction to estimate population variance.
     pub fn unbiased_variance(&self) -> f64 {
         let m = self.mean();
@@ -131,6 +170,7 @@ pub struct Summary {
     max_non_outlier: f64,
     mean: f64,
     median: f64,
+    range: f64,
     standard_deviation: f64,
     standard_error: f64,
     unbiased_variance: f64,
@@ -150,40 +190,18 @@ impl Summary {
     pub fn new(data: &[f64]) -> Result<Self, Error> {
         let s = Summarizer::new(data)?;
 
-        // The percentile arguments below are statically known to meet the
-        // `percentile()` bounds, so we can always unwrap.
-        let q1 = s.percentile(0.25).unwrap_or_else(|_| unreachable!());
-        let q3 = s.percentile(0.75).unwrap_or_else(|_| unreachable!());
-        let iqr = q3 - q1;
-
-        let lower_outlier_bound = q1 - 1.5 * iqr;
-        let min_non_outlier = s
-            .as_slice()
-            .iter()
-            .cloned()
-            .find(|&x| lower_outlier_bound <= x)
-            .unwrap_or_else(|| unreachable!());  // By definition of quartile.
-
-        let upper_outlier_bound = q3 + 1.5 * iqr;
-        let max_non_outlier = s
-            .as_slice()
-            .iter()
-            .cloned()
-            .rev()
-            .find(|&x| x <= upper_outlier_bound)
-            .unwrap_or_else(|| unreachable!());  // By definition of quartile.
-
         Ok(Summary {
-            iqr: iqr,
+            iqr: s.iqr(),
             len: s.data.len(),
-            lower_quartile: q1,
+            lower_quartile: s.lower_quartile(),
             min: s.min(),
-            min_non_outlier: min_non_outlier,
+            min_non_outlier: s.min_non_outlier(),
             max: s.max(),
-            max_non_outlier: max_non_outlier,
+            max_non_outlier: s.max_non_outlier(),
             mean: s.mean(),
             median: s.median(),
-            upper_quartile: q3,
+            range: s.range(),
+            upper_quartile: s.upper_quartile(),
             unbiased_variance: s.unbiased_variance(),
             standard_deviation: s.standard_deviation(),
             standard_error: s.standard_error(),
@@ -195,7 +213,7 @@ impl Summary {
     }
 
     pub fn range(&self) -> f64 {
-        self.max - self.min
+        self.range
     }
 
     pub fn iqr(&self) -> f64 {
