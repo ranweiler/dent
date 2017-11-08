@@ -25,7 +25,7 @@ struct Boxplot {
 
 impl Boxplot {
     fn from_summary(summary: &Summary) -> Self {
-        let range = summary.max() - summary.min();
+        let range = summary.range();
         let n = |x| (x - summary.min()) / range;
 
         Boxplot {
@@ -35,6 +35,22 @@ impl Boxplot {
             marker: n(summary.mean()),
             wh_lo: n(summary.min()),
             wh_hi: n(summary.max()),
+        }
+    }
+
+    fn from_summary_no_outliers(summary: &Summary) -> Self {
+        let min = summary.min_non_outlier().min(summary.mean());
+        let max = summary.max_non_outlier().max(summary.mean());
+        let range = max - min;
+        let n = |x| (x - min) / range;
+
+        Boxplot {
+            box_lo: n(summary.lower_quartile()),
+            box_mid: n(summary.median()),
+            box_hi: n(summary.upper_quartile()),
+            marker: n(summary.mean()),
+            wh_lo: n(summary.min_non_outlier()),
+            wh_hi: n(summary.max_non_outlier()),
         }
     }
 }
@@ -121,10 +137,14 @@ struct BoxplotChars {
 }
 
 impl BoxplotChars {
-    pub fn render(&self, summary: &Summary, width: usize) -> Result<String, &'static str> {
-        let data = Boxplot::from_summary(summary);
+    pub fn render(&self, summary: &Summary, width: usize, outliers: bool)
+                  -> Result<String, &'static str> {
+        let data = if outliers {
+            Boxplot::from_summary(summary)
+        } else {
+            Boxplot::from_summary_no_outliers(summary)
+        };
         let cols = BoxplotCols::new(&data, width);
-
         let mut plot = Plot::new(width);
 
         self.rows[0].render(&mut plot.0, &cols);
@@ -223,7 +243,7 @@ fn make_row(width: usize) -> Vec<String> {
     use std::iter::repeat;
 
     let mut row = vec![];
-    row.extend(repeat(String::from("")).take(width));
+    row.extend(repeat(String::from(" ")).take(width));
 
     row
 }
@@ -246,10 +266,11 @@ impl Plot {
     }
 }
 
-pub fn summary_plot(summary: &Summary, width: usize, ascii: bool) -> Result<String, &'static str> {
+pub fn summary_plot(summary: &Summary, width: usize, ascii: bool, outliers: bool)
+                    -> Result<String, &'static str> {
     let plot_style = if ascii { &ASCII_CHARS } else { &UNICODE_CHARS };
 
-    plot_style.render(summary, width)
+    plot_style.render(summary, width, outliers)
 }
 
 pub fn comparison_plot(
@@ -257,6 +278,7 @@ pub fn comparison_plot(
     width: usize,
     ascii: bool,
     border: bool,
+    outliers: bool,
 ) -> Result<String, &'static str> {
     if summaries.is_empty() {
         return Err("Cannot plot empty list of summaries");
@@ -271,8 +293,26 @@ pub fn comparison_plot(
     };
 
     use std::f64;
-    let min = summaries.iter().map(|s| s.min()).fold(f64::MAX, |x, y| x.min(y));
-    let max = summaries.iter().map(|s| s.max()).fold(f64::MIN, |x, y| x.max(y));
+
+    let plot_min = |s: &Summary| if outliers {
+        s.min()
+    } else {
+        s.min_non_outlier().min(s.mean())
+    };
+    let min = summaries
+        .iter()
+        .map(|s| plot_min(s))
+        .fold(f64::MAX, |x, y| x.min(y));
+
+    let plot_max = |s: &Summary| if outliers {
+        s.max()
+    } else {
+        s.max_non_outlier().max(s.mean())
+    };
+    let max = summaries
+        .iter()
+        .map(|s| plot_max(s))
+        .fold(f64::MIN, |x, y| x.max(y));
 
     // Used to compute relative widths of boxplots from their own ranges.
     let range = max - min;
@@ -280,18 +320,29 @@ pub fn comparison_plot(
     let mut plots = vec![];
 
     for s in summaries {
+        let s_min = if outliers {
+            s.min()
+        } else {
+            s.min_non_outlier().min(s.mean())
+        };
+        let s_max = if outliers {
+            s.max()
+        } else {
+            s.max_non_outlier().max(s.mean())
+        };
+
         // Proportion of total content width spanned by this plot.
-        let p = (s.max() - s.min()) / range;
+        let p = (s_max - s_min) / range;
 
         // Boxplot content width in cols.
         let w = (content_width * p).floor().max(1.0);
         assert!(1.0 <= w);
         assert!(w <= content_width);
 
-        let plot = plot!(stamp::Stamp::new(&summary_plot(s, w as usize, ascii)?))?;
+        let plot = plot!(stamp::Stamp::new(&summary_plot(s, w as usize, ascii, outliers)?))?;
 
-        assert!(min <= s.min());
-        let offset_p = (s.min() - min) / range;
+        assert!(min <= s_min);
+        let offset_p = (s_min - min) / range;
 
         let offset = (offset_p * content_width).min(content_width - w);
         assert!(offset + w <= content_width);

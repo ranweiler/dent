@@ -111,11 +111,12 @@ fn display_t_test(
     draw_plot: bool,
     width: usize,
     ascii: bool,
+    outliers: bool,
 ) {
     let t_test = ok!(welch_t_test(&summary1, &summary2));
 
     if draw_plot {
-        let p = ok!(plot::comparison_plot(&[summary1, summary2], width, ascii, true));
+        let p = ok!(plot::comparison_plot(&[summary1, summary2], width, ascii, true, outliers));
         println!("{}\n", p);
     }
 
@@ -137,7 +138,7 @@ fn display_summaries(
             .iter()
             .collect();
 
-        let plot = ok!(plot::comparison_plot(&summary_refs, width, ascii, true));
+        let plot = ok!(plot::comparison_plot(&summary_refs, width, ascii, true, true));
         println!("{}\n", plot);
     }
 
@@ -167,6 +168,9 @@ fn main() {
         .arg(Arg::with_name("lax")
              .long("lax")
              .help("Ignore non-numeric input lines"))
+        .arg(Arg::with_name("plot_outliers")
+             .long("outliers")
+             .help("Include outliers and use min/max for outer fences of boxplot"))
         .arg(Arg::with_name("plot")
              .short("p")
              .long("plot")
@@ -186,6 +190,7 @@ fn main() {
     let lax_parsing = matches.is_present("lax");
     let draw_plot = matches.is_present("plot");
     let use_stdin = matches.is_present("stdin");
+    let outliers = matches.is_present("plot_outliers");
 
     let width = matches
         .value_of("width")
@@ -213,6 +218,7 @@ fn main() {
                 draw_plot,
                 width,
                 ascii,
+                outliers,
             );
         }
         _ => {
