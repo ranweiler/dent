@@ -173,6 +173,10 @@ impl Summary {
         self.len as f64
     }
 
+    pub fn range(&self) -> f64 {
+        self.max - self.min
+    }
+
     pub fn iqr(&self) -> f64 {
         self.iqr
     }
