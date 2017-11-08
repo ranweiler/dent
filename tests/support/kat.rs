@@ -72,6 +72,7 @@ impl KnownSummary {
 pub struct KnownTTest {
     pub src1: String,
     pub src2: String,
+    pub p: f64,
     pub t: f64,
 }
 
@@ -93,6 +94,7 @@ impl KnownTTest {
             match key.as_ref() {
                 "src1" => known.src1 = val,
                 "src2" => known.src2 = val,
+                "p" => known.p = val.parse::<f64>().unwrap(),
                 "t" => known.t = val.parse::<f64>().unwrap(),
                 _ => panic!(),
             }
@@ -100,7 +102,7 @@ impl KnownTTest {
             keys_read.insert(key.to_string());
         }
 
-        assert_eq!(keys_read.len(), 3, "Missing lines in known answer file");
+        assert_eq!(keys_read.len(), 4, "Missing lines in known answer file");
 
         known
     }
@@ -214,7 +216,7 @@ macro_rules! t_test_kat {
         #[test]
         fn $test_name() {
             use dent::summary::Summary;
-            use dent::t_test::{SigLevel, welch_t_test};
+            use dent::t_test::welch_t_test;
             use $crate::support::kat::KnownTTest;
             use $crate::support::fs::read_data;
 
@@ -229,12 +231,14 @@ macro_rules! t_test_kat {
             let data2 = read_data(&data_path2);
             let summary2 = Summary::new(&data2).unwrap();
 
-            let t_test = welch_t_test(&summary1, &summary2, SigLevel::Alpha005);
+            let t_test = welch_t_test(&summary1, &summary2).unwrap();
 
             let precision = 1e-11 ;
-
+            println!("df = {}", t_test.df);
             assert_appx_eq!("T statistic", precision,
                             known.t, t_test.t);
+            assert_appx_eq!("P value", precision,
+                            known.p, t_test.p);
         }
     }
 }

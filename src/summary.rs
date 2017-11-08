@@ -75,10 +75,10 @@ impl Summarizer {
     /// We take a practical approach that aims to be both unsurprising and consistent with
     /// common statistics packages. In particular, our implementation guarantees that the
     /// boundary percentiles correspond to the sample min and max.
-    pub fn percentile(&self, p: f64) -> Result<f64, &'static str> {
-        if !p.is_finite() { return Err("Arg must be finite"); }
+    pub fn percentile(&self, p: f64) -> Result<f64, Error> {
+        if !p.is_finite() { return Err(Error::Undefined); }
         if p < 0.0 || 1.0 < p {
-            return Err("Arg must be in the unit interval");
+            return Err(Error::Undefined);
         }
 
         let rank = (self.size() - 1.0) * p;

@@ -6,7 +6,7 @@ extern crate term_size;
 use clap::{App, Arg};
 use dent::plot;
 use dent::summary::Summary;
-use dent::t_test::{SigLevel, TTest, welch_t_test};
+use dent::t_test::{TTest, welch_t_test};
 
 use std::error;
 use std::fs::File;
@@ -60,12 +60,9 @@ fn print_summary(s: &Summary) {
 
 fn print_t_test(t_test: &TTest) {
     let width = 12;
-    let reject = if t_test.reject { "yes" } else { "no" };
 
-    println!("{l:>w$} = {v}", w = width, l = "Reject H₀?", v = reject);
-    println!("{l:>w$} = {v}", w = width, l = "α", v = t_test.alpha);
     println!("{l:>w$} = {v}", w = width, l = "t", v = t_test.t);
-    println!("{l:>w$} = {v}", w = width, l = "Crit. v", v = t_test.crit);
+    println!("{l:>w$} = {v}", w = width, l = "p", v = t_test.p);
     println!("{l:>w$} = {v}", w = width, l = "DF", v = t_test.df);
 }
 
@@ -101,18 +98,6 @@ fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Err
     Ok(data)
 }
 
-fn parse_alpha(arg: &str) -> Result<SigLevel, String> {
-    Ok(match arg {
-        ".001" => SigLevel::Alpha001,
-        ".005" => SigLevel::Alpha005,
-        ".01"  => SigLevel::Alpha010,
-        ".025" => SigLevel::Alpha025,
-        ".05"  => SigLevel::Alpha050,
-        ".1"   => SigLevel::Alpha100,
-        _ => return Err(format!("Invalid value for α: {:?}", arg))
-    })
-}
-
 fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
     let stdin = io::stdin();
     let data = read_data(stdin.lock(), lax_parsing)?;
@@ -123,12 +108,11 @@ fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
 fn display_t_test(
     summary1: &Summary,
     summary2: &Summary,
-    alpha: SigLevel,
     draw_plot: bool,
     width: usize,
     ascii: bool,
 ) {
-    let t_test = welch_t_test(&summary1, &summary2, alpha);
+    let t_test = ok!(welch_t_test(&summary1, &summary2));
 
     if draw_plot {
         let p = ok!(plot::comparison_plot(&[summary1, summary2], width, ascii, true));
@@ -180,13 +164,6 @@ fn main() {
              .takes_value(true)
              .required_unless("stdin")
              .help("Path to one or more files of sample data"))
-        .arg(Arg::with_name("alpha")
-             .short("a")
-             .long("alpha")
-             .value_name("ALPHA")
-             .help("Significance level α")
-             .takes_value(true)
-             .default_value(".05"))
         .arg(Arg::with_name("lax")
              .long("lax")
              .help("Ignore non-numeric input lines"))
@@ -230,14 +207,9 @@ fn main() {
         0 => unreachable!(),
         // We want match 1 with the case `len()` > 2.
         2 => {
-            // Has a default value, so we can can unwrap.
-            let alpha_arg = matches.value_of("alpha").unwrap_or_else(|| unreachable!());
-            let alpha = ok!(parse_alpha(alpha_arg));
-
             display_t_test(
                 &summaries[0],
                 &summaries[1],
-                alpha,
                 draw_plot,
                 width,
                 ascii,

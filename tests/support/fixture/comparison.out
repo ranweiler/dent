@@ -4,8 +4,6 @@
      N         Min         Max      Median        Mean      StdDev      StdErr
      5           1           5           3           3  1.58113883  0.70710678
 
-  Reject H₀? = no
-           α = 0.05
            t = 0
-     Crit. v = 2.306004135033371
+           p = 1
           DF = 8

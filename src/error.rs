@@ -4,7 +4,9 @@ use std;
 #[derive(Debug)]
 pub enum Error {
     BadSample,
+    Diverged,
     EmptySample,
+    Undefined,
 }
 
 impl std::fmt::Display for Error {
@@ -17,7 +19,9 @@ impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
             Error::BadSample => "All sample data must be finite",
+            Error::Diverged => "Numeric evaluation diverged",
             Error::EmptySample => "Sample data set cannot be empty",
+            Error::Undefined => "Function undefined for argument",
         }
     }
 }
