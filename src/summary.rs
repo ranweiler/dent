@@ -56,7 +56,7 @@ impl Summarizer {
         self.data[0]
     }
 
-    pub fn min_non_outlier(&self) -> f64 {
+    pub fn min_adjacent(&self) -> f64 {
         let lower_outlier_bound = self.lower_quartile() - 1.5 * self.iqr();
 
         self.data
@@ -70,7 +70,7 @@ impl Summarizer {
         self.data[self.data.len() - 1]
     }
 
-    pub fn max_non_outlier(&self) -> f64 {
+    pub fn max_adjacent(&self) -> f64 {
         let upper_outlier_bound = self.upper_quartile() + 1.5 * self.iqr();
 
         self.data
@@ -165,9 +165,9 @@ pub struct Summary {
     len: usize,
     lower_quartile: f64,
     min: f64,
-    min_non_outlier: f64,
+    min_adjacent: f64,
     max: f64,
-    max_non_outlier: f64,
+    max_adjacent: f64,
     mean: f64,
     median: f64,
     range: f64,
@@ -195,9 +195,9 @@ impl Summary {
             len: s.data.len(),
             lower_quartile: s.lower_quartile(),
             min: s.min(),
-            min_non_outlier: s.min_non_outlier(),
+            min_adjacent: s.min_adjacent(),
             max: s.max(),
-            max_non_outlier: s.max_non_outlier(),
+            max_adjacent: s.max_adjacent(),
             mean: s.mean(),
             median: s.median(),
             range: s.range(),
@@ -228,16 +228,16 @@ impl Summary {
         self.min
     }
 
-    pub fn min_non_outlier(&self) -> f64 {
-        self.min_non_outlier
+    pub fn min_adjacent(&self) -> f64 {
+        self.min_adjacent
     }
 
     pub fn max(&self) -> f64 {
         self.max
     }
 
-    pub fn max_non_outlier(&self) -> f64 {
-        self.max_non_outlier
+    pub fn max_adjacent(&self) -> f64 {
+        self.max_adjacent
     }
 
     pub fn mean(&self) -> f64 {
