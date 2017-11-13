@@ -28,34 +28,61 @@ macro_rules! ok {
     }
 }
 
-fn print_summary(s: &Summary) {
+fn print_summary(s: &Summary, outliers: bool) {
     let width = 10;
     let size_width = 6;
 
-    println!(
-        "{n:>nw$}  {min:>w$}  {max:>w$}  {med:>w$}  {mean:>w$}  {sd:>w$}  {se:>w$}",
-        w = width,
-        nw = size_width,
-        n = "N",
-        min = "Min",
-        max = "Max",
-        med = "Median",
-        mean = "Mean",
-        sd= "StdDev",
-        se = "StdErr",
-    );
-    println!(
-        "{n:>nw$}  {min:>w$}  {max:>w$}  {med:>w$}  {mean:>w$}  {sd:>w$}  {se:>w$}",
-        w = width,
-        nw = size_width,
-        n = fmt::f(s.size(), width),
-        min = fmt::f(s.min(), width),
-        max = fmt::f(s.max(), width),
-        med = fmt::f(s.median(), width),
-        mean = fmt::f(s.mean(), width),
-        sd = fmt::f(s.standard_deviation(), width),
-        se = fmt::f(s.standard_error(), width),
-    );
+    if outliers {
+        println!(
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            w = width,
+            nw = size_width,
+            n = "Size",
+            min = "Min",
+            q1 = "Q1",
+            med = "Median",
+            q3 = "Q3",
+            max = "Max",
+            mean = "Mean",
+        );
+        println!(
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            w = width,
+            nw = size_width,
+            n = fmt::f(s.size(), width),
+            min = fmt::f(s.min(), width),
+            q1 = fmt::f(s.lower_quartile(), width),
+            med = fmt::f(s.median(), width),
+            q3 = fmt::f(s.upper_quartile(), width),
+            max = fmt::f(s.max(), width),
+            mean = fmt::f(s.mean(), width),
+        );
+    } else {
+        println!(
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            w = width,
+            nw = size_width,
+            n = "Size",
+            min = "Min Adj",
+            q1 = "Q1",
+            med = "Median",
+            q3 = "Q3",
+            max = "Max Adj",
+            mean = "Mean",
+        );
+        println!(
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            w = width,
+            nw = size_width,
+            n = fmt::f(s.size(), width),
+            min = fmt::f(s.min_adjacent(), width),
+            q1 = fmt::f(s.lower_quartile(), width),
+            med = fmt::f(s.median(), width),
+            q3 = fmt::f(s.upper_quartile(), width),
+            max = fmt::f(s.max_adjacent(), width),
+            mean = fmt::f(s.mean(), width),
+        );
+    }
 }
 
 fn print_t_test(t_test: &TTest) {
@@ -120,9 +147,9 @@ fn display_t_test(
         println!("{}\n", p);
     }
 
-    print_summary(&summary1);
+    print_summary(&summary1, outliers);
     println!();
-    print_summary(&summary2);
+    print_summary(&summary2, outliers);
     println!();
     print_t_test(&t_test);
 }
@@ -132,6 +159,7 @@ fn display_summaries(
     draw_plot: bool,
     width: usize,
     ascii: bool,
+    outliers: bool,
 ) {
     if draw_plot {
         let summary_refs: Vec<&Summary> = summaries
@@ -146,7 +174,7 @@ fn display_summaries(
         if i > 0 {
             println!();
         }
-        print_summary(&summaries[i]);
+        print_summary(&summaries[i], outliers);
     }
 }
 
@@ -222,7 +250,13 @@ fn main() {
             );
         }
         _ => {
-            display_summaries(&summaries, draw_plot, width, ascii);
+            display_summaries(
+                &summaries,
+                draw_plot,
+                width,
+                ascii,
+                outliers,
+            );
         },
     };
 }
