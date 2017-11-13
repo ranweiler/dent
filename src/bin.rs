@@ -92,10 +92,19 @@ fn print_summary(s: &Summary, outliers: bool) {
 fn print_t_test(t_test: &TTest, s1: &Summary, s2: &Summary) {
     let width = 12;
 
-    println!("{l:>w$} = {v} ± {se}", w = width, l = "m₁ ± SE", v = s1.mean(), se = s1.standard_error());
-    println!("{l:>w$} = {v} ± {se}", w = width, l = "m₂ ± SE", v = s2.mean(), se = s2.standard_error());
-    println!("{l:>w$} = {v}", w = width, l = "t", v = t_test.t);
+    let m1 = s1.mean();
+    let m2 = s2.mean();
+    let se1 = s1.standard_error();
+    let se2 = s1.standard_error();
+
+    let del = m2 - m1;
+    let se_del = (se1.powi(2) + se1.powi(2)).sqrt();
+
+    println!("{l:>w$} = {v} ± {se}", w = width, l = "m₁ ± SE", v = m1, se = se1);
+    println!("{l:>w$} = {v} ± {se}", w = width, l = "m₂ ± SE", v = m2, se = se2);
+    println!("{l:>w$} = {v} ± {se}", w = width, l = "m₂ - m₁ ± SE", v = del, se = se_del);
     println!("{l:>w$} = {v}", w = width, l = "p", v = t_test.p);
+    println!("{l:>w$} = {v}", w = width, l = "t", v = t_test.t);
     println!("{l:>w$} = {v}", w = width, l = "DF", v = t_test.df);
 }
 
