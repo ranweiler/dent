@@ -34,7 +34,7 @@ fn print_summary(s: &Summary, outliers: bool) {
 
     if outliers {
         println!(
-            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}  {std:>w$}",
             w = width,
             nw = size_width,
             n = "Size",
@@ -44,9 +44,10 @@ fn print_summary(s: &Summary, outliers: bool) {
             q3 = "Q3",
             max = "Max",
             mean = "Mean",
+            std = "Std Dev",
         );
         println!(
-            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}  {std:>w$}",
             w = width,
             nw = size_width,
             n = fmt::f(s.size(), width),
@@ -56,10 +57,11 @@ fn print_summary(s: &Summary, outliers: bool) {
             q3 = fmt::f(s.upper_quartile(), width),
             max = fmt::f(s.max(), width),
             mean = fmt::f(s.mean(), width),
+            std = fmt::f(s.standard_deviation(), width),
         );
     } else {
         println!(
-            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}  {std:>w$}",
             w = width,
             nw = size_width,
             n = "Size",
@@ -69,9 +71,10 @@ fn print_summary(s: &Summary, outliers: bool) {
             q3 = "Q3",
             max = "Max Adj",
             mean = "Mean",
+            std = "Std Dev",
         );
         println!(
-            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}",
+            "{n:>nw$}  {min:>w$}  {q1:>w$}  {med:>w$}  {q3:>w$}  {max:>w$}  {mean:>w$}  {std:>w$}",
             w = width,
             nw = size_width,
             n = fmt::f(s.size(), width),
@@ -81,6 +84,7 @@ fn print_summary(s: &Summary, outliers: bool) {
             q3 = fmt::f(s.upper_quartile(), width),
             max = fmt::f(s.max_adjacent(), width),
             mean = fmt::f(s.mean(), width),
+            std = fmt::f(s.standard_deviation(), width),
         );
     }
 }
