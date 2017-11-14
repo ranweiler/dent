@@ -1,9 +1,12 @@
-     N         Min         Max      Median        Mean      StdDev      StdErr
-     5           1           5           3           3  1.58113883  0.70710678
+  Size     Min Adj          Q1      Median          Q3     Max Adj        Mean     Std Dev
+     5           1           2           3           4           5           3  1.58113883
 
-     N         Min         Max      Median        Mean      StdDev      StdErr
-     5           1           5           3           3  1.58113883  0.70710678
+  Size     Min Adj          Q1      Median          Q3     Max Adj        Mean     Std Dev
+     5           1           2           3           4           5           3  1.58113883
 
-           t = 0
+     m₁ ± SE = 3 ± 0.7071067811865476
+     m₂ ± SE = 3 ± 0.7071067811865476
+m₂ - m₁ ± SE = 0 ± 1
            p = 1
+           t = 0
           DF = 8
