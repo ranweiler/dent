@@ -174,3 +174,42 @@ fn test_plot_ext_outlier_plot_outliers() {
     assert::stderr_is_empty(&out);
     assert::stdout_eq_file(&out, "ext_outlier_plot_outliers.out");
 }
+
+#[test]
+fn test_tsv_1() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+    ];
+    let out = exe::run(&["--tsv", &paths[0]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "tsv_1.out");
+}
+
+#[test]
+fn test_tsv_2() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_3_1"),
+    ];
+    let out = exe::run(&["--tsv", &paths[0], &paths[1]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "tsv_2.out");
+}
+
+#[test]
+fn test_tsv_3() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_3_1"),
+        fixture::path("normal_5_2"),
+    ];
+    let out = exe::run(&["--tsv", &paths[0], &paths[1], &paths[2]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "tsv_3.out");
+}

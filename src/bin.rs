@@ -193,6 +193,53 @@ fn display_summaries(
     }
 }
 
+fn display_summaries_tsv(summaries: &[Summary], sources: &[&str]) {
+    let parts = vec![
+        "Source",
+        "Size",
+        "Mean",
+        "Median",
+        "StandardDeviation",
+        "Variance",
+        "StandardError",
+        "Min",
+        "Max",
+        "Range",
+        "LowerQuartile",
+        "UpperQuartile",
+        "IQR",
+        "MinAdjacent",
+        "MaxAdjacent",
+    ];
+    let header = parts.join("\t");
+    println!("{}", header);
+
+    for (summ, src) in summaries.iter().zip(sources) {
+        print_summary_tsv(summ, src);
+    }
+}
+
+fn print_summary_tsv(summary: &Summary, source: &str) {
+    let values = vec![
+        summary.size(),
+        summary.mean(),
+        summary.median(),
+        summary.standard_deviation(),
+        summary.unbiased_variance(),
+        summary.standard_error(),
+        summary.min(),
+        summary.max(),
+        summary.range(),
+        summary.lower_quartile(),
+        summary.upper_quartile(),
+        summary.iqr(),
+        summary.min_adjacent(),
+        summary.max_adjacent(),
+    ];
+    let fields: Vec<String> = values.iter().map(|x| format!("{}", x)).collect();
+    println!("{}\t{}", source, fields.join("\t"));
+}
+
 fn main() {
     let matches = App::new("dent")
         .version("0.3.0")
@@ -211,6 +258,9 @@ fn main() {
         .arg(Arg::with_name("lax")
              .long("lax")
              .help("Ignore non-numeric input lines"))
+        .arg(Arg::with_name("tsv")
+             .long("tsv")
+             .help("Print summary data to stdout in TSV format"))
         .arg(Arg::with_name("plot_outliers")
              .long("outliers")
              .help("Include outliers and use min/max for outer fences of boxplot"))
@@ -234,6 +284,7 @@ fn main() {
     let draw_plot = matches.is_present("plot");
     let use_stdin = matches.is_present("stdin");
     let outliers = matches.is_present("plot_outliers");
+    let tsv = matches.is_present("tsv");
 
     let width = matches
         .value_of("width")
@@ -241,15 +292,21 @@ fn main() {
         .or(term_size::dimensions().map(|(w, _)| w))
         .unwrap_or(80);
 
-    let summaries = if use_stdin {
-        vec![ok!(summarize_stdin(lax_parsing))]
+    let (sources, summaries) = if use_stdin {
+        (vec!["stdin"], vec![ok!(summarize_stdin(lax_parsing))])
     } else {
         // Required if `stdin` is not present, so we can unwrap.
-        matches.values_of("files")
-            .unwrap_or_else(|| unreachable!())
-            .map(|f| ok!(summarize_file(f, lax_parsing)))
-            .collect()
+        let files = matches
+            .values_of("files")
+            .unwrap_or_else(|| unreachable!());
+
+        let summaries = files.clone().map(|f| ok!(summarize_file(f, lax_parsing))).collect();
+        (files.collect(), summaries)
     };
+
+    if tsv {
+        return display_summaries_tsv(&summaries, &sources);
+    }
 
     match summaries.len() {
         0 => unreachable!(),
