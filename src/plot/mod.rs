@@ -39,8 +39,8 @@ impl Boxplot {
     }
 
     fn from_summary_no_outliers(summary: &Summary) -> Self {
-        let min = summary.min_non_outlier().min(summary.mean());
-        let max = summary.max_non_outlier().max(summary.mean());
+        let min = summary.min_adjacent().min(summary.mean());
+        let max = summary.max_adjacent().max(summary.mean());
         let range = max - min;
         let n = |x| (x - min) / range;
 
@@ -49,8 +49,8 @@ impl Boxplot {
             box_mid: n(summary.median()),
             box_hi: n(summary.upper_quartile()),
             marker: n(summary.mean()),
-            wh_lo: n(summary.min_non_outlier()),
-            wh_hi: n(summary.max_non_outlier()),
+            wh_lo: n(summary.min_adjacent()),
+            wh_hi: n(summary.max_adjacent()),
         }
     }
 }
@@ -297,7 +297,7 @@ pub fn comparison_plot(
     let plot_min = |s: &Summary| if outliers {
         s.min()
     } else {
-        s.min_non_outlier().min(s.mean())
+        s.min_adjacent().min(s.mean())
     };
     let min = summaries
         .iter()
@@ -307,7 +307,7 @@ pub fn comparison_plot(
     let plot_max = |s: &Summary| if outliers {
         s.max()
     } else {
-        s.max_non_outlier().max(s.mean())
+        s.max_adjacent().max(s.mean())
     };
     let max = summaries
         .iter()
@@ -323,12 +323,12 @@ pub fn comparison_plot(
         let s_min = if outliers {
             s.min()
         } else {
-            s.min_non_outlier().min(s.mean())
+            s.min_adjacent().min(s.mean())
         };
         let s_max = if outliers {
             s.max()
         } else {
-            s.max_non_outlier().max(s.mean())
+            s.max_adjacent().max(s.mean())
         };
 
         // Proportion of total content width spanned by this plot.
