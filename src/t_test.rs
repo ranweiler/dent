@@ -9,7 +9,7 @@ pub struct TTest {
     pub df: f64,
 }
 
-pub fn t_test_2_sided(t: f64, df: f64) -> Result<TTest, Error> {
+fn t_test_2_sided(t: f64, df: f64) -> Result<TTest, Error> {
     let p = 1.0 - t_atv(t.abs(), df as f64)?;
 
     Ok(TTest { df, p, t })
