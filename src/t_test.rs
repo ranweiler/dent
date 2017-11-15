@@ -9,7 +9,7 @@ pub struct TTest {
 }
 
 pub fn t_test_2_sided(t: f64, df: f64) -> Result<TTest, Error> {
-    let p = 1.0 - t_cdf(t.abs(), df as f64)?;
+    let p = 1.0 - t_atv(t.abs(), df as f64)?;
 
     Ok(TTest { df, p, t })
 }
@@ -48,7 +48,7 @@ fn welch_satterthwaite_df(var1: f64, n1: f64, var2: f64, n2: f64) -> f64 {
     appx
 }
 
-fn t_cdf(t: f64, df: f64) -> Result<f64, Error> {
+fn t_atv(t: f64, df: f64) -> Result<f64, Error> {
     use num;
 
     let x = df / (df + t.powi(2));
