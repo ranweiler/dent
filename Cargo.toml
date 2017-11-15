@@ -17,3 +17,4 @@ term_size = "0.3.0"
 [[bin]]
 name = "dent"
 path = "src/bin.rs"
+doc = false
