@@ -1,4 +1,4 @@
-extern crate clap;
+#[macro_use] extern crate clap;
 extern crate dent;
 extern crate term;
 extern crate term_size;
@@ -242,7 +242,7 @@ fn print_summary_tsv(summary: &Summary, source: &str) {
 
 fn main() {
     let matches = App::new("dent")
-        .version("0.3.0")
+        .version(crate_version!())
         .author("Joe Ranweiler <joe@lemma.co>")
         .about("A tiny tool for t-tests &c.")
         .arg(Arg::with_name("stdin")
