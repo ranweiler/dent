@@ -1,6 +1,8 @@
 use error::Error;
 
 
+/// Wraps a sorted `Vec` of sample data and provides methods for computing
+/// various summary statistics.
 #[derive(Debug)]
 pub struct Summarizer {
     data: Vec<f64>,
@@ -35,27 +37,33 @@ impl Summarizer {
         Ok(s)
     }
 
+    /// Get a shared reference to owned copy of sorted sample data.
     pub fn as_slice(&self) -> &[f64] {
         self.data.as_slice()
     }
 
+    /// Size of the sample data as a floating point value.
     pub fn size(&self) -> f64 {
         self.data.len() as f64
     }
 
+    /// Difference between the upper and lower quartiles.
     pub fn iqr(&self) -> f64 {
         self.upper_quartile() - self.lower_quartile()
     }
 
+    /// The 25th percentile.
     pub fn lower_quartile(&self) -> f64 {
         // Statically known to be defined.
         self.percentile(0.25).unwrap_or_else(|_| unreachable!())
     }
 
+    /// The minimum value in the data set.
     pub fn min(&self) -> f64 {
         self.data[0]
     }
 
+    /// The minimum non-outlier value in the data set.
     pub fn min_adjacent(&self) -> f64 {
         let lower_outlier_bound = self.lower_quartile() - 1.5 * self.iqr();
 
@@ -66,10 +74,12 @@ impl Summarizer {
             .unwrap_or_else(|| unreachable!())  // By definition of quartile.
     }
 
+    /// The maximum value in the data set.
     pub fn max(&self) -> f64 {
         self.data[self.data.len() - 1]
     }
 
+    /// The maximum non-outlier value in the data set.
     pub fn max_adjacent(&self) -> f64 {
         let upper_outlier_bound = self.upper_quartile() + 1.5 * self.iqr();
 
@@ -81,12 +91,14 @@ impl Summarizer {
             .unwrap_or_else(|| unreachable!())  // By definition of quartile.
     }
 
+    /// The arithmetic sample mean.
     pub fn mean(&self) -> f64 {
         let t: f64 = self.data.iter().sum();
 
         t / self.size()
     }
 
+    /// The 50th percentile.
     pub fn median(&self) -> f64 {
         let d = &self.data;
         let n = d.len();
@@ -130,16 +142,21 @@ impl Summarizer {
         Ok(x)
     }
 
+    /// The difference between the minimum and maximum value.
     pub fn range(&self) -> f64 {
         self.max() - self.min()
     }
 
+    /// The 75th percentile.
     pub fn upper_quartile(&self) -> f64 {
         // Statically known to be defined.
         self.percentile(0.75).unwrap_or_else(|_| unreachable!())
     }
 
-    /// Uses Bessel's correction to estimate population variance.
+    /// Sample variance.
+    ///
+    /// Computed using Bessel's correction to provide an unbiased estimate of
+    /// population variance.
     pub fn unbiased_variance(&self) -> f64 {
         let m = self.mean();
         let sum_sq_diff: f64 = self.data
@@ -150,15 +167,22 @@ impl Summarizer {
         (1.0 / (self.size() - 1.0)) * sum_sq_diff
     }
 
+    /// Standard deviation of the sample.
     pub fn standard_deviation(&self) -> f64 {
         self.unbiased_variance().sqrt()
     }
 
+    /// Standard error, the standard deviation of the sample mean.
     pub fn standard_error(&self) -> f64 {
         self.standard_deviation() / self.size().sqrt()
     }
 }
 
+/// Like a static `Summarizer`, with all fields computed upon initialization.
+///
+/// Does not retain a sorted copy of the sample data, and so cannot compute
+/// arbitrary percentiles. For descriptions of individual methods, see the
+/// `Summarizer` documentation.
 #[derive(Debug)]
 pub struct Summary {
     iqr: f64,
@@ -248,7 +272,6 @@ impl Summary {
         self.median
     }
 
-    /// Uses Bessel's correction to estimate population variance.
     pub fn unbiased_variance(&self) -> f64 {
         self.unbiased_variance
     }

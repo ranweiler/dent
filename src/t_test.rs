@@ -2,18 +2,20 @@ use error::Error;
 use summary::Summary;
 
 
+/// The results and parameters of a two-sided, unequal-variances t-test.
 pub struct TTest {
     pub p: f64,
     pub t: f64,
     pub df: f64,
 }
 
-pub fn t_test_2_sided(t: f64, df: f64) -> Result<TTest, Error> {
-    let p = 1.0 - t_cdf(t.abs(), df as f64)?;
+fn t_test_2_sided(t: f64, df: f64) -> Result<TTest, Error> {
+    let p = 1.0 - t_atv(t.abs(), df as f64)?;
 
     Ok(TTest { df, p, t })
 }
 
+/// Conduct a two-sided t-test that does not assume equal population variances.
 pub fn welch_t_test(s1: &Summary, s2: &Summary) -> Result<TTest, Error> {
     let (t, df) = welch_t_statistic(s1, s2);
 
@@ -37,6 +39,9 @@ fn welch_t_statistic(s1: &Summary, s2: &Summary) -> (f64, f64) {
     (t, df)
 }
 
+/// Degrees of freedom, approximated using the Welch-Satterthwaite equation [1].
+///
+/// [1]: http://www.itl.nist.gov/div898/handbook/mpc/section5/mpc571.htm
 fn welch_satterthwaite_df(var1: f64, n1: f64, var2: f64, n2: f64) -> f64 {
     let df1 = n1 - 1.0;
     let df2 = n2 - 1.0;
@@ -48,7 +53,13 @@ fn welch_satterthwaite_df(var1: f64, n1: f64, var2: f64, n2: f64) -> f64 {
     appx
 }
 
-fn t_cdf(t: f64, df: f64) -> Result<f64, Error> {
+/// The definite integral of the density function of Student's t-distribution
+/// over an interval [-t, t]. Also called the A(t|ν) function.
+///
+/// See equation 6.4.9 in [1].
+///
+/// [1]: "Numerical Recipes in C", 2nd Ed., p. 228
+fn t_atv(t: f64, df: f64) -> Result<f64, Error> {
     use num;
 
     let x = df / (df + t.powi(2));
