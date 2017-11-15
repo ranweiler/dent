@@ -2,6 +2,8 @@ use error::Error;
 use summary::Summarizer;
 
 
+/// The results of a simple linear regression with one predictor variable and
+/// one response variable.
 pub struct LinearRegression {
     intercept: f64,
     r: f64,
@@ -10,6 +12,12 @@ pub struct LinearRegression {
 }
 
 impl LinearRegression {
+    /// Fit the sample data to a linear model `Y = αX + β`, where `X` is the
+    /// predictor variable and `Y` is the response variable.
+    ///
+    /// The sample data points are pairs of the form `(x, y)`, where each `x` is
+    /// interpreted as an observed value of the predictor variable and `y` is a
+    /// value of the response variable.
     pub fn new(data: &[(f64, f64)]) -> Result<Self, Error> {
         if data.is_empty() {
             return Err(Error::EmptySample);
@@ -18,18 +26,22 @@ impl LinearRegression {
         LinearRegression::simple_lr(data)
     }
 
+    /// Intercept `β` of the fitted linear model `Y = αX + β`.
     pub fn intercept(&self) -> f64 {
         self.intercept
     }
 
+    /// Pearson's correlation coefficient.
     pub fn r(&self) -> f64 {
         self.r
     }
 
+    /// Slope coefficient `α` of the fitted linear model `Y = αX + β`.
     pub fn slope(&self) -> f64 {
         self.slope
     }
 
+    /// Standard error of the estimate.
     pub fn standard_error(&self) -> f64 {
         self.standard_error
     }
