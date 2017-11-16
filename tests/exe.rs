@@ -110,6 +110,22 @@ fn test_plot_many() {
 }
 
 #[test]
+fn test_plot_many_outlier_data() {
+    let paths = vec![
+        fixture::path("normal_0_1"),
+        fixture::path("normal_0_1_mod_outlier"),
+        fixture::path("normal_0_1_ext_outlier"),
+        fixture::path("normal_5_2"),
+        fixture::path("normal_3_1"),
+    ];
+    let out = exe::run(&["-p", "-w", "90", &paths[0], &paths[1], &paths[2], &paths[3], &paths[4]]);
+
+    assert::exit_ok(&out);
+    assert::stderr_is_empty(&out);
+    assert::stdout_eq_file(&out, "plot_many_outlier_data.out");
+}
+
+#[test]
 fn test_plot_far_apart() {
     let paths = vec![
         fixture::path("near_0"),

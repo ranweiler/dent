@@ -181,7 +181,7 @@ fn display_summaries(
             .iter()
             .collect();
 
-        let plot = ok!(plot::comparison_plot(&summary_refs, width, ascii, true, true));
+        let plot = ok!(plot::comparison_plot(&summary_refs, width, ascii, true, outliers));
         println!("{}\n", plot);
     }
 
