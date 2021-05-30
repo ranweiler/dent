@@ -108,7 +108,7 @@ fn print_t_test(t_test: &TTest, s1: &Summary, s2: &Summary) {
     println!("{l:>w$} = {v}", w = width, l = "DF", v = t_test.df);
 }
 
-fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
+fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<dyn error::Error>> {
     let f = File::open(path).or_else(|e| {
         log::error(&format!("Could not open file: {:?}", path));
         Err(e)
@@ -120,7 +120,7 @@ fn summarize_file(path: &str, lax_parsing: bool) -> Result<Summary, Box<error::E
     Ok(Summary::new(&data)?)
 }
 
-fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Error>>
+fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<dyn error::Error>>
     where R: BufRead {
     let mut data: Vec<f64> = vec![];
 
@@ -140,7 +140,7 @@ fn read_data<R>(reader: R, lax_parsing: bool) -> Result<Vec<f64>, Box<error::Err
     Ok(data)
 }
 
-fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<error::Error>> {
+fn summarize_stdin(lax_parsing: bool) -> Result<Summary, Box<dyn error::Error>> {
     let stdin = io::stdin();
     let data = read_data(stdin.lock(), lax_parsing)?;
 
