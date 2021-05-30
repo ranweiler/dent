@@ -157,10 +157,8 @@ macro_rules! assert_appx_eq {
     ($name:expr, $tolerance:expr, $known:expr, $actual:expr) => {
         let d = ($known - $actual).abs();
 
-        let err = format!("{}: {} and {} differ by {} > {}",
-                          $name, $known, $actual, d, $tolerance);
-
-        assert!(d < $tolerance, err);
+        assert!(d < $tolerance, "{}: {} and {} differ by {} > {}",
+                $name, $known, $actual, d, $tolerance);
     };
 }
 
